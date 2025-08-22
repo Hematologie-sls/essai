@@ -8,14 +8,14 @@ bgb1147;BGB_1147_103 (BeiGene);BeiGene;Ib/II;LAM/SMD HR;open;BGB_11417 (Bcl_2);"
 combola;COMBOLA (GFM);GFM;I/II;SMD FR;open;"Luspatercept; EPO";SMD faible risque sans RS.;;;Ades;lionel.ades@aphp.fr;;21/08/2025
 element;CA056_025 ELEMENT (BMS);BMS;III;SMD FR;open;"Luspatercept; Epoétine alfa";"<5 % blastes; <1 % blastes sg; sEPO ≤500 U/L; Hb ≤9.5; pas de transfusion 16/24 sem.";Inclusion sur résultats centralisés;;Ades;lionel.ades@aphp.fr;;21/08/2025
 ag946;AG946_C_002 (AGIOS);AGIOS;IIa/IIb;SMD FR;open;AG_946;"IPSS_R ≤3.5, PNN>500, Hb<10, Plt>75k; BOM obligatoire.";"Résultats locaux; Wash_out EPO 28 j / Luspa 65 j; Pas de Revlimid/AZA antérieurs";;Fenaux;pierre.fenaux@aphp.fr;;21/08/2025
-atomyelo;ATOMYELO (GFM);GFM;I;SMD FR;open;Arsenic oral (ATO);;;"MEP faite; ouverture en juillet";Fenaux;pierre.fenaux@aphp.fr;;21/08/2025
-alfappp;ALFA PPP (LAM);ALFA;Cohorte;LAM;open;Tout traitement;LAM ND ou R/R.;;;ALFA;;;21/08/2025
-thema;eTHEMA (LAM/LAL/SMD_HR);eTHEMA;Cohorte;LAM/LSL/SMD;open;Tout traitement;"De novo / secondaire / therapy_related; ND non traité.";;;THEMA;;;21/08/2025
-dynhaemics;DYNHAEMICS;eTHEMA;Cohorte;LAM;open;3+7;LAM;;;Itzkson;raphael.itzykson@aphp.fr;;21/08/2025
-salma;SALMA;eTHEMA;II;LAM;open;3+7+salazo;LAM;;;Itzkson;raphael.itzykson@aphp.fr;;21/08/2025
-dream;DREAM;eTHEMA;Cohorte;LAM;open;AZA VEN ou AZA IVO;LAM;;;Duchmann;matthieu.duchmann@aphp.fr;;21/08/2025
+atomyelo;ATOMYELO (GFM);GFM;I;SMD FR;open;Arsenic oral (ATO);Syndromes myélodysplasiques de faible risque en échec aux Agents Stimulants l’Erythropoïèse et au Luspatercept;;"MEP faite; ouverture en juillet";Fenaux;pierre.fenaux@aphp.fr;;21/08/2025
+alfappp;ALFA PPP (LAM);ALFA;Cohorte;LAM;open;Tout traitement;LAM 1L;;;ALFA;;;21/08/2025
+thema;eTHEMA (LAM/LAL/SMD_HR);eTHEMA;Cohorte;LAM/LAL/SMD;open;Tout traitement;"De novo / secondaire / therapy_related; ND non traité.";;;THEMA;;;21/08/2025
+dynhaemics;DYNHAEMICS;eTHEMA;Cohorte;LAM;open;3+7;LAM 3+7;;;Itzkson;raphael.itzykson@aphp.fr;;21/08/2025
+salma;SALMA;eTHEMA;II;LAM;open;3+7+salazo;LAM 3+7;;;Itzkson;raphael.itzykson@aphp.fr;;21/08/2025
+dream;DREAM;eTHEMA;Cohorte;LAM;open;AZA VEN ou AZA IVO;LAM non intensif;;;Duchmann;matthieu.duchmann@aphp.fr;;21/08/2025
 astx030;ASTX030_01 (ASTEX);ASTEX;III;SMD;planned;"Cedazuridine + Azacitidine (oral); vs AZA SC";;;"Contrat signé; autorisations OK; Mise en place 25/06/2025";Fenaux;pierre.fenaux@aphp.fr;;21/08/2025
-pyramidh;PyramIDH (Servier);Servier;III;MDS;open;"Ivosidenib; Azacitidine";MDS;IDH1 muté, premeire ligne, eligible a HMA;;Sebert;marie.sebert@aphp.fr;;21/08/2025
+pyramidh;PyramIDH (Servier);Servier;III;SMD;open;"Ivosidenib; Azacitidine";MDS IDH1;IDH1 muté, premeire ligne, eligible a HMA;;Sebert;marie.sebert@aphp.fr;;21/08/2025
 ker050;KER_050_D301 (Keros);Keros;III;SMD FR;planned;Elritercept (KER_050);MDS;;;Ades;lionel.ades@aphp.fr;;21/08/2025
 camelot;cAMeLot (J&J);J&J;III;LAM;Open;"Bleximenib; Vénétoclax; Azacitidine";LAM;;Ouvre en Septembre;Ades;lionel.ades@aphp.fr;;21/08/2025
 GRAALL;GRAALL 2024;GRAALL;III;LAL;open;Blina;LAL 1L;;;Boissel;Nicolas.boissel@aphp.fr;;21/08/2025
