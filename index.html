@@ -18,9 +18,10 @@
     }
     .toolbar>*{ width:100%;}
     .view-toggle{ display:flex; gap:8px; }
+
     input,select,button{ padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; font-size:14px;}
     button{ cursor:pointer; border:1px solid var(--primary); background:var(--primary); color:#fff; font-weight:600;}
-    button.secondary{ background:#fff; color:var(--primary); }
+    button.secondary{ background:#fff; color:#0b5aa2; }
     button.ghost{ background:#fff; color:#374151; border:1px solid var(--border); }
 
     /* Dropdown catégories */
@@ -50,11 +51,14 @@
     thead th{ text-align:left; background:var(--muted); border-bottom:1px solid var(--border); padding:10px; font-size:13px; color:#374151; user-select:none; cursor:pointer; }
     tbody td{ border-bottom:1px solid var(--border); padding:10px; font-size:14px; }
     tbody tr:hover{ background:#fcfcfd; }
+
     .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
     .chip{ background:#eef6ff; color:#0b5aa2; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #dbeafe;}
+
     .footer{ display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:10px;}
     .pagination{ display:flex; gap:6px; }
     .pagination button{ padding:8px 10px; }
+
     .cards{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
     .card{ background:#fff; border:1px solid var(--border); border-radius:14px; padding:14px; box-shadow:0 1px 2px rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:8px; }
     .card h3{ margin:0; font-size:16px; color:#111827; }
@@ -62,12 +66,282 @@
     .kv{ font-size:13px; color:#374151; }
     .kv b{ color:#111827; font-weight:600; }
     .hidden{ display:none !important; }
-    @media (max-width:1100px){ .cards{ grid-template-columns:repeat(2,1fr);} }
+
+    @media (max-width:1100px){ .cards{ grid-template-columns:repeat(2, 1fr);} }
     @media (max-width:700px){ .toolbar{ grid-template-columns:1fr 1fr; } .cards{ grid-template-columns:1fr; } }
-    @media print{ .toolbar,.footer{ display:none!important; } body{ background:#fff; } .card{ break-inside:avoid; } table{ box-shadow:none; } }
+
+    @media print {
+      .toolbar,.footer{ display:none!important; }
+      body{ background:#fff; }
+      .card{ break-inside:avoid; }
+      table{ box-shadow:none; }
+    }
   </style>
 </head>
 <body>
-  <!-- (le code HTML complet de la page avec filtres, cartes, tableau, etc. tel que fourni plus haut) -->
+  <div id="app">
+    <header>
+      <div class="container">
+        <h1>Essais cliniques</h1>
+        <div class="chips" id="summary"></div>
+        <div style="color:#6b7280;font-size:13px">Source : <code>essais.csv</code> (auto-détection du séparateur)</div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Rechercher (Titre, Population, Interventions, Notes, Contact, ...)" />
+        <select id="phase"><option value="">Phase (toutes)</option></select>
+        <select id="statut"><option value="">Statut (tous)</option></select>
+
+        <!-- Dropdown catégories avec cases à cocher -->
+        <div id="catDropdown" class="dropdown">
+          <button type="button" id="catBtn" class="dropdown-button">
+            Catégories <span id="catCount" class="count" style="display:none;">0</span>
+          </button>
+          <div class="dropdown-panel" id="catPanel" aria-label="Choisir des catégories">
+            <input id="catSearch" class="srch" type="search" placeholder="Filtrer les catégories..." />
+            <label class="checkrow">
+              <input type="checkbox" id="catAll" class="checkbox" /> <span>Tout sélectionner</span>
+            </label>
+            <div id="catList"></div>
+            <div class="actions">
+              <button type="button" id="catApply" class="secondary">Appliquer</button>
+              <button type="button" id="catClear" class="ghost">Effacer</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="view-toggle">
+          <button id="modeList" class="ghost" title="Mode liste">Liste</button>
+          <button id="modeCards" class="ghost" title="Mode cartes">Cartes</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button id="exportCsv" class="secondary">Exporter CSV</button>
+          <button id="exportJson" class="secondary">Exporter JSON</button>
+          <button id="print">Imprimer</button>
+        </div>
+      </div>
+
+      <!-- Liste -->
+      <table id="table" class="hidden">
+        <thead>
+          <tr>
+            <th data-key="ID">ID</th>
+            <th data-key="Titre">Titre</th>
+            <th data-key="Phase">Phase</th>
+            <th data-key="Statut">Statut</th>
+            <th data-key="Categorie">Catégorie</th>
+            <th data-key="Population">Population</th>
+            <th data-key="Interventions">Interventions</th>
+            <th data-key="Notes">Notes</th>
+            <th data-key="Contact">Contact</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <!-- Cartes par défaut -->
+      <div id="cards" class="cards"></div>
+
+      <div class="footer">
+        <div id="count"></div>
+        <div class="pagination">
+          <button id="prev" class="secondary">Précédent</button>
+          <span id="pageInfo" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;"></span>
+          <button id="next">Suivant</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- PapaParse -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    /************ Utils ************/
+    const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+    const uniq=a=>[...new Set(a.filter(Boolean))].sort((x,y)=>(''+x).localeCompare(''+y,'fr',{numeric:true,sensitivity:'base'}));
+    const contains=(h,n)=>!n||(h||'').toString().toLowerCase().includes((n||'').toLowerCase());
+    const stripBOM=s=>typeof s==='string'?s.replace(/^\uFEFF/,''):s;
+    const normKey=k=>stripBOM((k||'')+'').trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/\s+/g,'');
+    function pick(r,aliases){const m={}; for(const k of Object.keys(r)) m[normKey(k)]=r[k]; for(const a of aliases){const na=normKey(a); if(na in m) return m[na];} return ''}
+
+    /************ État ************/
+    let rows=[], filtered=[];
+    let sortKey=null, sortDir=1;
+    const pageSize=10; let page=1; let mode='cards';
+    let allCategories=[]; let selectedCategories=new Set();
+
+    /************ Rendu résumé ************/
+    function renderSummary(){
+      const chips=[]; const q=$('#q').value.trim(), p=$('#phase').value, s=$('#statut').value; const cats=[...selectedCategories];
+      if(q) chips.push(`Recherche: “${q}”`);
+      if(p) chips.push(`Phase: ${p}`);
+      if(s) chips.push(`Statut: ${s}`);
+      if(cats.length) chips.push(`Catégories: ${cats.join(', ')}`);
+      $('#summary').innerHTML=chips.map(t=>`<span class="chip">${t}</span>`).join('');
+    }
+
+    /************ Rendu liste & cartes ************/
+    function renderTable(){
+      const total=filtered.length, tp=Math.max(1, Math.ceil(total/pageSize));
+      page=Math.min(Math.max(1,page),tp);
+      const sl=filtered.slice((page-1)*pageSize,page*pageSize);
+      $('#table tbody').innerHTML=sl.map(r=>`
+        <tr>
+          <td>${r.ID??''}</td><td>${r.Titre??''}</td><td>${r.Phase??''}</td><td>${r.Statut??''}</td>
+          <td>${r.Categorie??''}</td><td>${r.Population??''}</td><td>${r.Interventions??''}</td><td>${r.Notes??''}</td><td>${r.Contact??''}</td>
+        </tr>`).join('');
+      $('#count').textContent=`${total} essai(s) • Page ${page}/${tp}`; $('#pageInfo').textContent=`Page ${page}/${tp}`;
+      $('#prev').disabled=page<=1; $('#next').disabled=page>=tp;
+    }
+
+    function renderCards(){
+      const total=filtered.length, tp=Math.max(1, Math.ceil(total/pageSize));
+      page=Math.min(Math.max(1,page),tp);
+      const sl=filtered.slice((page-1)*pageSize,page*pageSize);
+      $('#cards').innerHTML=sl.map(r=>`
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h3>${r.Titre||'(Sans titre)'}</h3><span class="badge">${r.Phase||'—'}</span>
+          </div>
+          <div class="kv"><b>Statut :</b> ${r.Statut||'—'}</div>
+          <div class="kv"><b>Catégorie :</b> ${r.Categorie||'—'}</div>
+          <div class="kv"><b>Population :</b> ${r.Population||'—'}</div>
+          <div class="kv"><b>Interventions :</b> ${r.Interventions||'—'}</div>
+          <div class="kv"><b>Notes :</b> ${r.Notes||'—'}</div>
+          <div class="kv"><b>Contact :</b> ${r.Contact||'—'}</div>
+        </div>`).join('');
+      $('#count').textContent=`${total} essai(s) • Page ${page}/${tp}`;
+      $('#pageInfo').textContent=`Page ${page}/${tp}`;
+      $('#prev').disabled=page<=1; $('#next').disabled=page>=tp;
+    }
+
+    function render(){ renderSummary(); if(mode==='list'){ $('#table').classList.remove('hidden'); $('#cards').classList.add('hidden'); renderTable(); } else { $('#cards').classList.remove('hidden'); $('#table').classList.add('hidden'); renderCards(); } }
+
+    /************ Filtres ************/
+    function applyFilters(){
+      const q=$('#q').value.trim(), p=$('#phase').value, s=$('#statut').value; const cats=[...selectedCategories];
+      filtered=rows
+        .filter(r =>
+          contains(r.Titre,q) || contains(r.Phase,q) || contains(r.Statut,q) || contains(r.Categorie,q) ||
+          contains(r.Population,q) || contains(r.Interventions,q) || contains(r.Notes,q) || contains(r.Contact,q)
+        )
+        .filter(r => p ? r.Phase===p : true)
+        .filter(r => s ? r.Statut===s : true)
+        .filter(r => cats.length ? cats.includes(r.Categorie) : true);
+      if(sortKey){ filtered.sort((a,b)=>{ const av=(a[sortKey]??'').toString(), bv=(b[sortKey]??'').toString(); return av.localeCompare(bv,'fr',{numeric:true,sensitivity:'base'})*sortDir; }); }
+      page=1; render(); updateCatCount();
+    }
+
+    function populateFilters(){
+      const phases=uniq(rows.map(r=>r.Phase));
+      const statuts=uniq(rows.map(r=>r.Statut));
+      allCategories=uniq(rows.map(r=>r.Categorie));
+      $('#phase').innerHTML='<option value="">Phase (toutes)</option>'+phases.map(v=>`<option>${v}</option>`).join('');
+      $('#statut').innerHTML='<option value="">Statut (tous)</option>'+statuts.map(v=>`<option>${v}</option>`).join('');
+      renderCategoryCheckboxes(allCategories);
+    }
+
+    /************ Dropdown catégories ************/
+    function renderCategoryCheckboxes(list){
+      const container=$('#catList');
+      container.innerHTML=list.map(v=>`
+        <label class="checkrow">
+          <input type="checkbox" class="checkbox catItem" value="${v ? String(v).replace(/"/g,'&quot;') : ''}" ${selectedCategories.has(v)?'checked':''}/>
+          <span>${v||'—'}</span>
+        </label>`).join('');
+    }
+    function updateCatCount(){ const n=selectedCategories.size; const badge=$('#catCount'); if(n>0){ badge.style.display='inline-block'; badge.textContent=n; } else { badge.style.display='none'; } }
+    function openCloseDropdown(open){ const dd=$('#catDropdown'); if(open===undefined) dd.classList.toggle('open'); else dd.classList.toggle('open', !!open); }
+    function clearCategories(){ selectedCategories.clear(); $$('.catItem').forEach(cb=>cb.checked=false); $('#catAll').checked=false; applyFilters(); }
+    function selectAllCategories(checked){ $$('.catItem').forEach(cb=>{ cb.checked=checked; if(checked) selectedCategories.add(cb.value); else selectedCategories.delete(cb.value); }); applyFilters(); }
+    function initCategoryDropdownEvents(){
+      $('#catBtn').addEventListener('click',(e)=>{ e.stopPropagation(); openCloseDropdown(); });
+      document.addEventListener('click',(e)=>{ const dd=$('#catDropdown'); if(!dd.contains(e.target)) openCloseDropdown(false); });
+      $('#catSearch').addEventListener('input',(e)=>{ const q=e.target.value.trim().toLowerCase(); const filteredList=!q?allCategories:allCategories.filter(c=>((c||'')+'').toLowerCase().includes(q)); renderCategoryCheckboxes(filteredList); });
+      $('#catAll').addEventListener('change',(e)=>{ selectAllCategories(e.target.checked); });
+      $('#catApply').addEventListener('click',()=>{ $$('.catItem').forEach(cb=>{ if(cb.checked) selectedCategories.add(cb.value); else selectedCategories.delete(cb.value); }); applyFilters(); openCloseDropdown(false); });
+      $('#catClear').addEventListener('click',()=>{ clearCategories(); });
+      $('#catPanel').addEventListener('change',(e)=>{ if(e.target.classList.contains('catItem')){ const val=e.target.value; if(e.target.checked) selectedCategories.add(val); else selectedCategories.delete(val); updateCatCount(); } });
+    }
+
+    /************ Export ************/
+    function exportCurrentToCSV(){
+      if(!filtered.length) return;
+      const header=Object.keys(filtered[0]);
+      const lines=[
+        header.join(','),
+        ...filtered.map(r=>header.map(k=>{
+          const cell=(r[k]??'').toString().replaceAll('"','""');
+          return /[,"\n]/.test(cell)?`"${cell}"`:cell;
+        }).join(','))
+      ];
+      const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='essais_filtrés.csv';
+      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
+    }
+    function exportCurrentToJSON(){
+      const blob=new Blob([JSON.stringify(filtered,null,2)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='essais_filtrés.json';
+      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
+    }
+
+    /************ Événements généraux ************/
+    function initEvents(){
+      $('#q').addEventListener('input',applyFilters);
+      $('#phase').addEventListener('change',applyFilters);
+      $('#statut').addEventListener('change',applyFilters);
+
+      $('#print').addEventListener('click',()=>window.print());
+      $('#exportCsv').addEventListener('click',exportCurrentToCSV);
+      $('#exportJson').addEventListener('click',exportCurrentToJSON);
+
+      $('#prev').addEventListener('click',()=>{ page=Math.max(1,page-1); render(); });
+      $('#next').addEventListener('click',()=>{ page=page+1; render(); });
+
+      // Tri tableau
+      $$('#table thead th').forEach(th=>{
+        th.addEventListener('click',()=>{
+          const k=th.getAttribute('data-key');
+          if(sortKey===k) sortDir=-sortDir; else { sortKey=k; sortDir=1; }
+          applyFilters();
+        });
+      });
+
+      $('#modeList').addEventListener('click',()=>{ mode='list'; render(); });
+      $('#modeCards').addEventListener('click',()=>{ mode='cards'; render(); });
+
+      initCategoryDropdownEvents();
+    }
+
+    /************ Chargement CSV ************/
+    function onCsvLoaded(data){
+      rows=data.map(r=>({
+        ID:pick(r,['id','identifiant','code']),
+        Titre:pick(r,['titre','title','nom','nomdessai','essai']),
+        Phase:pick(r,['phase']),
+        Statut:pick(r,['statut','status','etat']),
+        Categorie:pick(r,['categorie','catégorie','category']),
+        Population:pick(r,['population','patients','cohorte']),
+        Interventions:pick(r,['interventions','intervention','traitement','traitements','treatments']),
+        Notes:pick(r,['notes','remarques','commentaires','commentaireslibres']),
+        Contact:pick(r,['contact_name','contactname','contact','email','courriel','telephone','téléphone'])
+      }));
+      populateFilters(); applyFilters();
+    }
+
+    function loadCSV(){
+      Papa.parse('essais.csv',{
+        download:true, header:true, skipEmptyLines:'greedy',
+        delimitersToGuess:[',',';','\t','|'],
+        complete:res=>onCsvLoaded(res.data),
+        error:err=>alert('Erreur CSV : '+(err?.message||err))
+      });
+    }
+
+    // Init
+    initEvents(); loadCSV();
+  </script>
 </body>
 </html>
