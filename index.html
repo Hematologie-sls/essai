@@ -37,13 +37,13 @@
     <div class="container">
       <h1>Essais cliniques</h1>
       <div class="chips" id="summary"></div>
-      <div style="color:#6b7280;font-size:13px">Source : <code>essais.csv</code> (auto-détection du séparateur)</div>
+      <div style="color:#6b7280;font-size:13px">Source : <code>yoyo.csv</code> (auto-détection du séparateur)</div>
     </div>
   </header>
 
   <main class="container">
     <div class="toolbar">
-      <input id="q" type="search" placeholder="Rechercher (Titre, Investigateur, Centre, ...)" />
+      <input id="q" type="search" placeholder="Rechercher (Titre, Centre, Population, Notes, Contact, ...)" />
       <select id="phase"><option value="">Phase (toutes)</option></select>
       <select id="statut"><option value="">Statut (tous)</option></select>
       <select id="categorie"><option value="">Catégorie (toutes)</option></select>
@@ -62,10 +62,10 @@
           <th data-key="Phase">Phase</th>
           <th data-key="Statut">Statut</th>
           <th data-key="Categorie">Catégorie</th>
-          <th data-key="Investigateur">Investigateur</th>
           <th data-key="Centre">Centre</th>
-          <th data-key="Debut">Début</th>
-          <th data-key="Fin">Fin</th>
+          <th data-key="Population">Population</th>
+          <th data-key="Notes">Notes</th>
+          <th data-key="Contact">Contact</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -136,10 +136,10 @@
           <td>${r.Phase??''}</td>
           <td>${r.Statut??''}</td>
           <td>${r.Categorie??''}</td>
-          <td>${r.Investigateur??''}</td>
           <td>${r.Centre??''}</td>
-          <td>${r.Debut??''}</td>
-          <td>${r.Fin??''}</td>
+          <td>${r.Population??''}</td>
+          <td>${r.Notes??''}</td>
+          <td>${r.Contact??''}</td>
         </tr>
       `).join('');
 
@@ -153,8 +153,14 @@
       const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
       filtered = rows
         .filter(r =>
-          contains(r.Titre,q) || contains(r.Investigateur,q) || contains(r.Centre,q) ||
-          contains(r.Phase,q) || contains(r.Statut,q) || contains(r.Categorie,q)
+          contains(r.Titre,q) ||
+          contains(r.Centre,q) ||
+          contains(r.Phase,q) ||
+          contains(r.Statut,q) ||
+          contains(r.Categorie,q) ||
+          contains(r.Population,q) ||
+          contains(r.Notes,q) ||
+          contains(r.Contact,q)
         )
         .filter(r => p ? r.Phase===p : true)
         .filter(r => s ? r.Statut===s : true)
@@ -218,18 +224,19 @@
       });
     }
 
-    // ===== Chargement CSV avec auto-détection du séparateur et normalisation =====
+    // ===== Chargement CSV avec auto-détection & normalisation =====
     function onCsvLoaded(data){
+      // ordre des clés = ordre d'insertion -> contrôle l'export
       rows = data.map(r => ({
-        ID:            pick(r, ['id','identifiant','code']),
-        Titre:         pick(r, ['titre','title','nom','nomdessai','essai']),
-        Phase:         pick(r, ['phase']),
-        Statut:        pick(r, ['statut','status','etat']),
-        Categorie:     pick(r, ['categorie','catégorie','category']),
-        Investigateur: pick(r, ['investigateur','investigator','pi','principalinvestigator']),
-        Centre:        pick(r, ['centre','site','hopital','hôpital']),
-        Debut:         pick(r, ['debut','début','start','datedebut','startdate']),
-        Fin:           pick(r, ['fin','end','datefin','enddate'])
+        ID:         pick(r, ['id','identifiant','code']),
+        Titre:      pick(r, ['titre','title','nom','nomdessai','essai']),
+        Phase:      pick(r, ['phase']),
+        Statut:     pick(r, ['statut','status','etat']),
+        Categorie:  pick(r, ['categorie','catégorie','category']),
+        Centre:     pick(r, ['centre','site','hopital','hôpital']),
+        Population: pick(r, ['population','patients','cohorte']),
+        Notes:      pick(r, ['notes','remarques','commentaires','commentaireslibres']),
+        Contact:    pick(r, ['contact','email','courriel','telephone','téléphone'])
       }));
       populateFilters(); applyFilters();
     }
@@ -251,5 +258,3 @@
   </script>
 </body>
 </html>
-
-
