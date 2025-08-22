@@ -14,22 +14,62 @@
     header{ padding:20px 16px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,#fff,#fafafa);}
     h1{ margin:0; font-size:1.4rem; color:var(--primary);}
     .container{ max-width:1100px; margin:0 auto; padding:16px;}
-    .toolbar{ display:grid; gap:8px; grid-template-columns:1fr repeat(4,minmax(120px,180px)); align-items:center; margin:10px 0 14px;}
+
+    .toolbar{
+      display:grid; gap:8px; grid-template-columns:1fr repeat(5,minmax(120px,180px));
+      align-items:center; margin:10px 0 14px;
+    }
     .toolbar>*{ width:100%;}
-    input,select,button{ padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; font-size:14px;}
+    .view-toggle{ display:flex; gap:8px; }
+
+    input,select,button{
+      padding:10px 12px; border:1px solid var(--border);
+      border-radius:10px; background:#fff; font-size:14px;
+    }
     button{ cursor:pointer; border:1px solid var(--primary); background:var(--primary); color:#fff; font-weight:600;}
-    button.secondary{ background:#fff; color:var(--primary);}
-    table{ width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 2px rgba(0,0,0,0.04);}
-    thead th{ text-align:left; background:var(--muted); border-bottom:1px solid var(--border); padding:10px; font-size:13px; color:#374151; user-select:none; cursor:pointer;}
-    tbody td{ border-bottom:1px solid var(--border); padding:10px; font-size:14px;}
-    tbody tr:hover{ background:#fcfcfd;}
+    button.secondary{ background:#fff; color:var(--primary); }
+    button.ghost{ background:#fff; color:#374151; border:1px solid var(--border); }
+
+    table{
+      width:100%; border-collapse:collapse; background:#fff; border-radius:12px; overflow:hidden;
+      box-shadow:0 1px 2px rgba(0,0,0,0.04);
+    }
+    thead th{
+      text-align:left; background:var(--muted); border-bottom:1px solid var(--border);
+      padding:10px; font-size:13px; color:#374151; user-select:none; cursor:pointer;
+    }
+    tbody td{ border-bottom:1px solid var(--border); padding:10px; font-size:14px; }
+    tbody tr:hover{ background:#fcfcfd; }
+
     .chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
     .chip{ background:#eef6ff; color:#0b5aa2; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #dbeafe;}
+
     .footer{ display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:10px;}
-    .pagination{ display:flex; gap:6px;}
-    .pagination button{ padding:8px 10px;}
-    @media (max-width:900px){ .toolbar{ grid-template-columns:1fr 1fr; } }
-    @media print { header,.toolbar,.footer{ display:none!important;} table{ box-shadow:none;} body{ background:#fff;} }
+    .pagination{ display:flex; gap:6px; }
+    .pagination button{ padding:8px 10px; }
+
+    /* Cartes */
+    .cards{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; }
+    .card{
+      background:#fff; border:1px solid var(--border); border-radius:14px; padding:14px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.04); display:flex; flex-direction:column; gap:8px;
+    }
+    .card h3{ margin:0; font-size:16px; color:#111827; }
+    .badge{ display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); background:#fafafa; }
+    .kv{ font-size:13px; color:#374151; }
+    .kv b{ color:#111827; font-weight:600; }
+    .card-actions{ display:flex; gap:8px; margin-top:6px; }
+    .hidden{ display:none !important; }
+
+    @media (max-width: 1100px){ .cards{ grid-template-columns:repeat(2, 1fr);} }
+    @media (max-width: 700px){ .toolbar{ grid-template-columns:1fr 1fr; } .cards{ grid-template-columns:1fr; } }
+
+    @media print {
+      header,.toolbar,.footer{ display:none!important; }
+      table{ box-shadow:none; }
+      body{ background:#fff; }
+      .card{ break-inside:avoid; }
+    }
   </style>
 </head>
 <body>
@@ -37,7 +77,7 @@
     <div class="container">
       <h1>Essais cliniques</h1>
       <div class="chips" id="summary"></div>
-      <div style="color:#6b7280;font-size:13px">Source : <code>yoyo.csv</code> (auto-détection du séparateur)</div>
+      <div style="color:#6b7280;font-size:13px">Source : <code>essais.csv</code> (auto-détection du séparateur)</div>
     </div>
   </header>
 
@@ -47,6 +87,10 @@
       <select id="phase"><option value="">Phase (toutes)</option></select>
       <select id="statut"><option value="">Statut (tous)</option></select>
       <select id="categorie"><option value="">Catégorie (toutes)</option></select>
+      <div class="view-toggle">
+        <button id="modeList" class="ghost" title="Mode liste">Liste</button>
+        <button id="modeCards" class="ghost" title="Mode cartes">Cartes</button>
+      </div>
       <div style="display:flex; gap:8px;">
         <button id="exportCsv" class="secondary" title="Exporter la vue en CSV">Exporter CSV</button>
         <button id="exportJson" class="secondary" title="Exporter la vue en JSON">Exporter JSON</button>
@@ -54,6 +98,7 @@
       </div>
     </div>
 
+    <!-- Liste -->
     <table id="table">
       <thead>
         <tr>
@@ -70,6 +115,9 @@
       </thead>
       <tbody></tbody>
     </table>
+
+    <!-- Cartes -->
+    <div id="cards" class="cards hidden"></div>
 
     <div class="footer">
       <div id="count"></div>
@@ -92,11 +140,8 @@
 
     function stripBOM(s){ return typeof s==='string' ? s.replace(/^\uFEFF/, '') : s; }
     function normKey(k){
-      return stripBOM((k||'')+'')
-        .trim()
-        .toLowerCase()
-        .normalize('NFD').replace(/\p{Diacritic}/gu,'')
-        .replace(/\s+/g,'');
+      return stripBOM((k||'')+'').trim().toLowerCase()
+        .normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/\s+/g,'');
     }
     function pick(row, aliases){
       const map = {};
@@ -112,8 +157,9 @@
     let rows = [], filtered = [];
     let sortKey = null, sortDir = 1;
     const pageSize = 10; let page = 1;
+    let mode = 'list'; // 'list' | 'cards'
 
-    // ===== Rendu =====
+    // ===== Rendu résumé =====
     function renderSummary(){
       const chips = [];
       const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
@@ -124,6 +170,7 @@
       $('#summary').innerHTML = chips.map(t=>`<span class="chip">${t}</span>`).join('');
     }
 
+    // ===== Rendu LISTE =====
     function renderTable(){
       const total = filtered.length, totalPages = Math.max(1, Math.ceil(total / pageSize));
       page = Math.min(Math.max(1,page), totalPages);
@@ -148,7 +195,73 @@
       $('#prev').disabled = page<=1; $('#next').disabled = page>=totalPages;
     }
 
+    // ===== Rendu CARTES =====
+    function renderCards(){
+      const total = filtered.length, totalPages = Math.max(1, Math.ceil(total / pageSize));
+      page = Math.min(Math.max(1,page), totalPages);
+      const slice = filtered.slice((page-1)*pageSize, page*pageSize);
+
+      $('#cards').innerHTML = slice.map(r=>`
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <h3>${r.Titre||'(Sans titre)'}</h3>
+            <span class="badge">${r.Phase||'—'}</span>
+          </div>
+          <div class="kv"><b>Statut :</b> ${r.Statut||'—'}</div>
+          <div class="kv"><b>Catégorie :</b> ${r.Categorie||'—'}</div>
+          <div class="kv"><b>Centre :</b> ${r.Centre||'—'}</div>
+          <div class="kv"><b>Population :</b> ${r.Population||'—'}</div>
+          <div class="kv"><b>Notes :</b> ${r.Notes||'—'}</div>
+          <div class="kv"><b>Contact :</b> ${r.Contact||'—'}</div>
+          <div class="card-actions">
+            <button class="ghost" title="Exporter cette carte en JSON" onclick='downloadCardJSON(${JSON.stringify({}).replace("{}", "")})'>Exporter</button>
+          </div>
+        </div>
+      `).join('');
+
+      $('#count').textContent = `${total} essai(s) • Page ${page}/${totalPages}`;
+      $('#pageInfo').textContent = `Page ${page}/${totalPages}`;
+      $('#prev').disabled = page<=1; $('#next').disabled = page>=totalPages;
+    }
+
+    // ===== Export utils =====
+    function downloadBlob(filename, blob){
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a); a.click();
+      URL.revokeObjectURL(a.href); a.remove();
+    }
+    function exportCurrentToCSV(){
+      if(!filtered.length) return;
+      const header = Object.keys(filtered[0]);
+      const lines = [
+        header.join(','),  // séparateur virgule
+        ...filtered.map(r=>header.map(k=>{
+          const cell = (r[k]??'').toString().replaceAll('"','""');
+          return /[,\"\n]/.test(cell) ? `"${cell}"` : cell;
+        }).join(','))
+      ];
+      downloadBlob('essais_filtrés.csv', new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'}));
+    }
+    function exportCurrentToJSON(){
+      downloadBlob('essais_filtrés.json', new Blob([JSON.stringify(filtered,null,2)], {type:'application/json'}));
+    }
+
     // ===== Logique =====
+    function render(){
+      renderSummary();
+      if(mode==='list'){
+        $('#table').classList.remove('hidden');
+        $('#cards').classList.add('hidden');
+        renderTable();
+      }else{
+        $('#cards').classList.remove('hidden');
+        $('#table').classList.add('hidden');
+        renderCards();
+      }
+    }
+
     function applyFilters(){
       const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
       filtered = rows
@@ -173,7 +286,7 @@
           return av.localeCompare(bv,'fr',{numeric:true,sensitivity:'base'}) * sortDir;
         });
       }
-      page = 1; renderSummary(); renderTable();
+      page = 1; render();
     }
 
     function populateFilters(){
@@ -185,36 +298,20 @@
       $('#categorie').innerHTML = '<option value="">Catégorie (toutes)</option>' + categories.map(v=>`<option>${v}</option>`).join('');
     }
 
-    function exportCurrentToCSV(){
-      if(!filtered.length) return;
-      const header = Object.keys(filtered[0]);
-      const lines = [
-        header.join(','),  // séparateur virgule
-        ...filtered.map(r=>header.map(k=>{
-          const cell = (r[k]??'').toString().replaceAll('"','""');
-          return /[,\"\n]/.test(cell) ? `"${cell}"` : cell;
-        }).join(','))
-      ];
-      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'essais_filtrés.csv';
-      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
-    }
-    function exportCurrentToJSON(){
-      const blob = new Blob([JSON.stringify(filtered,null,2)], {type:'application/json'});
-      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'essais_filtrés.json';
-      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
-    }
-
     function initEvents(){
       $('#q').addEventListener('input', applyFilters);
       $('#phase').addEventListener('change', applyFilters);
       $('#statut').addEventListener('change', applyFilters);
       $('#categorie').addEventListener('change', applyFilters);
+
       $('#print').addEventListener('click', ()=>window.print());
       $('#exportCsv').addEventListener('click', exportCurrentToCSV);
       $('#exportJson').addEventListener('click', exportCurrentToJSON);
-      $('#prev').addEventListener('click', ()=>{ page=Math.max(1,page-1); renderTable(); });
-      $('#next').addEventListener('click', ()=>{ page=page+1; renderTable(); });
+
+      $('#prev').addEventListener('click', ()=>{ page=Math.max(1,page-1); render(); });
+      $('#next').addEventListener('click', ()=>{ page=page+1; render(); });
+
+      // Tri pour le mode Liste
       $$('#table thead th').forEach(th=>{
         th.addEventListener('click', ()=>{
           const key = th.getAttribute('data-key');
@@ -222,11 +319,14 @@
           applyFilters();
         });
       });
+
+      // Toggle vue
+      $('#modeList').addEventListener('click', ()=>{ mode='list'; render(); });
+      $('#modeCards').addEventListener('click', ()=>{ mode='cards'; render(); });
     }
 
     // ===== Chargement CSV avec auto-détection & normalisation =====
     function onCsvLoaded(data){
-      // ordre des clés = ordre d'insertion -> contrôle l'export
       rows = data.map(r => ({
         ID:         pick(r, ['id','identifiant','code']),
         Titre:      pick(r, ['titre','title','nom','nomdessai','essai']),
@@ -236,7 +336,7 @@
         Centre:     pick(r, ['centre','site','hopital','hôpital']),
         Population: pick(r, ['population','patients','cohorte']),
         Notes:      pick(r, ['notes','remarques','commentaires','commentaireslibres']),
-        Contact:    pick(r, ['contact','email','courriel','telephone','téléphone'])
+        Contact:    pick(r, ['contact_name','contactname','contact','email','courriel','telephone','téléphone'])
       }));
       populateFilters(); applyFilters();
     }
