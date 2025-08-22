@@ -6,11 +6,25 @@
   <title>Essais cliniques</title>
   <link rel="icon" href="data:,">
   <style>
+    /* Écran de verrouillage */
+    body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif; margin:0; }
+    #locked{
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      height:100vh; gap:12px; background:#f9fafb; padding:16px;
+    }
+    #locked input{ padding:10px; border:1px solid #ccc; border-radius:8px; font-size:16px; width:260px; }
+    #locked button{ padding:10px 16px; font-size:16px; border-radius:8px; cursor:pointer;
+      background:#0b5aa2; color:#fff; border:none; width:260px; }
+    #error{ color:#dc2626; font-size:14px; min-height:1.2em; }
+
+    /* App masquée par défaut */
+    #app{ display:none; }
+
+    /* Thème */
     :root{
       --primary:#0b5aa2; --accent:#e44d26; --bg:#ffffff; --muted:#f4f6f8;
       --text:#1f2937; --border:#e5e7eb;
     }
-    body{ font-family: system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--text); margin:0;}
     header{ padding:20px 16px; border-bottom:1px solid var(--border); background:linear-gradient(180deg,#fff,#fafafa);}
     h1{ margin:0; font-size:1.4rem; color:var(--primary);}
     .container{ max-width:1100px; margin:0 auto; padding:16px;}
@@ -58,108 +72,125 @@
     .badge{ display:inline-block; font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); background:#fafafa; }
     .kv{ font-size:13px; color:#374151; }
     .kv b{ color:#111827; font-weight:600; }
-    .card-actions{ display:flex; gap:8px; margin-top:6px; }
     .hidden{ display:none !important; }
 
     @media (max-width: 1100px){ .cards{ grid-template-columns:repeat(2, 1fr);} }
     @media (max-width: 700px){ .toolbar{ grid-template-columns:1fr 1fr; } .cards{ grid-template-columns:1fr; } }
 
     @media print {
-      header,.toolbar,.footer{ display:none!important; }
-      table{ box-shadow:none; }
+      #locked, .toolbar, .footer{ display:none!important; }
       body{ background:#fff; }
       .card{ break-inside:avoid; }
+      table{ box-shadow:none; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <div class="container">
-      <h1>Essais cliniques</h1>
-      <div class="chips" id="summary"></div>
-      <div style="color:#6b7280;font-size:13px">Source : <code>essais.csv</code> (auto-détection du séparateur)</div>
-    </div>
-  </header>
+  <!-- Écran de verrouillage -->
+  <div id="locked">
+    <h2>Accès protégé</h2>
+    <input id="pwd" type="password" placeholder="Mot de passe" />
+    <button id="btnEnter">Entrer</button>
+    <div id="error"></div>
+  </div>
 
-  <main class="container">
-    <div class="toolbar">
-      <input id="q" type="search" placeholder="Rechercher (Titre, Centre, Population, Notes, Contact, ...)" />
-      <select id="phase"><option value="">Phase (toutes)</option></select>
-      <select id="statut"><option value="">Statut (tous)</option></select>
-      <select id="categorie"><option value="">Catégorie (toutes)</option></select>
-      <div class="view-toggle">
-        <button id="modeList" class="ghost" title="Mode liste">Liste</button>
-        <button id="modeCards" class="ghost" title="Mode cartes">Cartes</button>
+  <!-- Application -->
+  <div id="app">
+    <header>
+      <div class="container">
+        <h1>Essais cliniques</h1>
+        <div class="chips" id="summary"></div>
+        <div style="color:#6b7280;font-size:13px">Source : <code>essais.csv</code> (auto-détection du séparateur)</div>
       </div>
-      <div style="display:flex; gap:8px;">
-        <button id="exportCsv" class="secondary" title="Exporter la vue en CSV">Exporter CSV</button>
-        <button id="exportJson" class="secondary" title="Exporter la vue en JSON">Exporter JSON</button>
-        <button id="print">Imprimer</button>
+    </header>
+
+    <main class="container">
+      <div class="toolbar">
+        <input id="q" type="search" placeholder="Rechercher (Titre, Population, Notes, Contact, ...)" />
+        <select id="phase"><option value="">Phase (toutes)</option></select>
+        <select id="statut"><option value="">Statut (tous)</option></select>
+        <select id="categorie"><option value="">Catégorie (toutes)</option></select>
+        <div class="view-toggle">
+          <button id="modeList" class="ghost" title="Mode liste">Liste</button>
+          <button id="modeCards" class="ghost" title="Mode cartes">Cartes</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button id="exportCsv" class="secondary">Exporter CSV</button>
+          <button id="exportJson" class="secondary">Exporter JSON</button>
+          <button id="print">Imprimer</button>
+        </div>
       </div>
-    </div>
 
-    <!-- Liste -->
-    <table id="table">
-      <thead>
-        <tr>
-          <th data-key="ID">ID</th>
-          <th data-key="Titre">Titre</th>
-          <th data-key="Phase">Phase</th>
-          <th data-key="Statut">Statut</th>
-          <th data-key="Categorie">Catégorie</th>
-          <th data-key="Centre">Centre</th>
-          <th data-key="Population">Population</th>
-          <th data-key="Notes">Notes</th>
-          <th data-key="Contact">Contact</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+      <!-- Liste (masquée par défaut, pas de colonne Centre) -->
+      <table id="table" class="hidden">
+        <thead>
+          <tr>
+            <th data-key="ID">ID</th>
+            <th data-key="Titre">Titre</th>
+            <th data-key="Phase">Phase</th>
+            <th data-key="Statut">Statut</th>
+            <th data-key="Categorie">Catégorie</th>
+            <th data-key="Population">Population</th>
+            <th data-key="Notes">Notes</th>
+            <th data-key="Contact">Contact</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
 
-    <!-- Cartes -->
-    <div id="cards" class="cards hidden"></div>
+      <!-- Cartes (par défaut) -->
+      <div id="cards" class="cards"></div>
 
-    <div class="footer">
-      <div id="count"></div>
-      <div class="pagination">
-        <button id="prev" class="secondary">Précédent</button>
-        <span id="pageInfo" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;"></span>
-        <button id="next">Suivant</button>
+      <div class="footer">
+        <div id="count"></div>
+        <div class="pagination">
+          <button id="prev" class="secondary">Précédent</button>
+          <span id="pageInfo" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;"></span>
+          <button id="next">Suivant</button>
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+  </div>
 
-  <!-- PapaParse (CSV parser) -->
+  <!-- PapaParse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // ===== Helpers robustes =====
-    const $ = s => document.querySelector(s);
-    const $$ = s => Array.from(document.querySelectorAll(s));
-    const uniq = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>(''+a).localeCompare(''+b,'fr',{numeric:true,sensitivity:'base'}));
-    const contains = (hay, needle) => !needle || (hay||'').toString().toLowerCase().includes((needle||'').toLowerCase());
-
-    function stripBOM(s){ return typeof s==='string' ? s.replace(/^\uFEFF/, '') : s; }
-    function normKey(k){
-      return stripBOM((k||'')+'').trim().toLowerCase()
-        .normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/\s+/g,'');
+    /************ Verrouillage ************/
+    let appInitialized = false;
+    function showApp(){
+      document.getElementById('locked').style.display="none";
+      document.getElementById('app').style.display="block";
+      if(!appInitialized){ appInitialized = true; initApp(); loadCSV(); }
     }
-    function pick(row, aliases){
-      const map = {};
-      for (const k of Object.keys(row)) map[normKey(k)] = row[k];
-      for (const a of aliases){
-        const na = normKey(a);
-        if (na in map) return map[na];
+    function unlock(){
+      const val = document.getElementById('pwd').value;
+      if(val === "Leucemie"){
+        sessionStorage.setItem('unlocked','1');
+        showApp();
+      }else{
+        document.getElementById('error').textContent = "Mot de passe incorrect";
       }
-      return '';
     }
+    document.getElementById('btnEnter').addEventListener('click', unlock);
+    document.getElementById('pwd').addEventListener('keydown', (e)=>{ if(e.key==='Enter') unlock(); });
+    // Si déjà déverrouillé pendant la session, rouvrir directement
+    if(sessionStorage.getItem('unlocked')==='1'){ showApp(); }
 
-    // ===== État =====
+    /************ Helpers & état ************/
+    const $  = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const uniq = a => [...new Set(a.filter(Boolean))].sort((x,y)=>(''+x).localeCompare(''+y,'fr',{numeric:true,sensitivity:'base'}));
+    const contains = (h,n)=>!n||(h||'').toString().toLowerCase().includes((n||'').toLowerCase());
+    const stripBOM = s => typeof s==='string' ? s.replace(/^\uFEFF/, '') : s;
+    const normKey = k => stripBOM((k||'')+'').trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu,'').replace(/\s+/g,'');
+    function pick(row, aliases){ const map={}; for(const k of Object.keys(row)) map[normKey(k)] = row[k]; for(const a of aliases){ const na=normKey(a); if(na in map) return map[na]; } return ''; }
+
     let rows = [], filtered = [];
     let sortKey = null, sortDir = 1;
     const pageSize = 10; let page = 1;
-    let mode = 'list'; // 'list' | 'cards'
+    let mode = 'cards'; // cartes par défaut
 
-    // ===== Rendu résumé =====
+    /************ Rendu ************/
     function renderSummary(){
       const chips = [];
       const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
@@ -170,7 +201,6 @@
       $('#summary').innerHTML = chips.map(t=>`<span class="chip">${t}</span>`).join('');
     }
 
-    // ===== Rendu LISTE =====
     function renderTable(){
       const total = filtered.length, totalPages = Math.max(1, Math.ceil(total / pageSize));
       page = Math.min(Math.max(1,page), totalPages);
@@ -183,7 +213,6 @@
           <td>${r.Phase??''}</td>
           <td>${r.Statut??''}</td>
           <td>${r.Categorie??''}</td>
-          <td>${r.Centre??''}</td>
           <td>${r.Population??''}</td>
           <td>${r.Notes??''}</td>
           <td>${r.Contact??''}</td>
@@ -195,7 +224,6 @@
       $('#prev').disabled = page<=1; $('#next').disabled = page>=totalPages;
     }
 
-    // ===== Rendu CARTES =====
     function renderCards(){
       const total = filtered.length, totalPages = Math.max(1, Math.ceil(total / pageSize));
       page = Math.min(Math.max(1,page), totalPages);
@@ -203,19 +231,14 @@
 
       $('#cards').innerHTML = slice.map(r=>`
         <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-            <h3>${r.Titre||'(Sans titre)'}</h3>
-            <span class="badge">${r.Phase||'—'}</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <h3>${r.Titre||'(Sans titre)'}</h3><span class="badge">${r.Phase||'—'}</span>
           </div>
           <div class="kv"><b>Statut :</b> ${r.Statut||'—'}</div>
           <div class="kv"><b>Catégorie :</b> ${r.Categorie||'—'}</div>
-          <div class="kv"><b>Centre :</b> ${r.Centre||'—'}</div>
           <div class="kv"><b>Population :</b> ${r.Population||'—'}</div>
           <div class="kv"><b>Notes :</b> ${r.Notes||'—'}</div>
           <div class="kv"><b>Contact :</b> ${r.Contact||'—'}</div>
-          <div class="card-actions">
-            <button class="ghost" title="Exporter cette carte en JSON" onclick='downloadCardJSON(${JSON.stringify({}).replace("{}", "")})'>Exporter</button>
-          </div>
         </div>
       `).join('');
 
@@ -224,31 +247,6 @@
       $('#prev').disabled = page<=1; $('#next').disabled = page>=totalPages;
     }
 
-    // ===== Export utils =====
-    function downloadBlob(filename, blob){
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      document.body.appendChild(a); a.click();
-      URL.revokeObjectURL(a.href); a.remove();
-    }
-    function exportCurrentToCSV(){
-      if(!filtered.length) return;
-      const header = Object.keys(filtered[0]);
-      const lines = [
-        header.join(','),  // séparateur virgule
-        ...filtered.map(r=>header.map(k=>{
-          const cell = (r[k]??'').toString().replaceAll('"','""');
-          return /[,\"\n]/.test(cell) ? `"${cell}"` : cell;
-        }).join(','))
-      ];
-      downloadBlob('essais_filtrés.csv', new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'}));
-    }
-    function exportCurrentToJSON(){
-      downloadBlob('essais_filtrés.json', new Blob([JSON.stringify(filtered,null,2)], {type:'application/json'}));
-    }
-
-    // ===== Logique =====
     function render(){
       renderSummary();
       if(mode==='list'){
@@ -262,12 +260,12 @@
       }
     }
 
+    /************ Logique ************/
     function applyFilters(){
       const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
       filtered = rows
         .filter(r =>
           contains(r.Titre,q) ||
-          contains(r.Centre,q) ||
           contains(r.Phase,q) ||
           contains(r.Statut,q) ||
           contains(r.Categorie,q) ||
@@ -298,6 +296,26 @@
       $('#categorie').innerHTML = '<option value="">Catégorie (toutes)</option>' + categories.map(v=>`<option>${v}</option>`).join('');
     }
 
+    function exportCurrentToCSV(){
+      if(!filtered.length) return;
+      const header = Object.keys(filtered[0]);
+      const lines = [
+        header.join(','),  // séparateur virgule
+        ...filtered.map(r=>header.map(k=>{
+          const cell = (r[k]??'').toString().replaceAll('"','""');
+          return /[,\"\n]/.test(cell) ? `"${cell}"` : cell;
+        }).join(','))
+      ];
+      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'essais_filtrés.csv';
+      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
+    }
+    function exportCurrentToJSON(){
+      const blob = new Blob([JSON.stringify(filtered,null,2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'essais_filtrés.json';
+      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
+    }
+
     function initEvents(){
       $('#q').addEventListener('input', applyFilters);
       $('#phase').addEventListener('change', applyFilters);
@@ -311,7 +329,7 @@
       $('#prev').addEventListener('click', ()=>{ page=Math.max(1,page-1); render(); });
       $('#next').addEventListener('click', ()=>{ page=page+1; render(); });
 
-      // Tri pour le mode Liste
+      // Tri pour la vue Liste
       $$('#table thead th').forEach(th=>{
         th.addEventListener('click', ()=>{
           const key = th.getAttribute('data-key');
@@ -325,7 +343,7 @@
       $('#modeCards').addEventListener('click', ()=>{ mode='cards'; render(); });
     }
 
-    // ===== Chargement CSV avec auto-détection & normalisation =====
+    /************ Chargement CSV ************/
     function onCsvLoaded(data){
       rows = data.map(r => ({
         ID:         pick(r, ['id','identifiant','code']),
@@ -333,7 +351,6 @@
         Phase:      pick(r, ['phase']),
         Statut:     pick(r, ['statut','status','etat']),
         Categorie:  pick(r, ['categorie','catégorie','category']),
-        Centre:     pick(r, ['centre','site','hopital','hôpital']),
         Population: pick(r, ['population','patients','cohorte']),
         Notes:      pick(r, ['notes','remarques','commentaires','commentaireslibres']),
         Contact:    pick(r, ['contact_name','contactname','contact','email','courriel','telephone','téléphone'])
@@ -352,9 +369,10 @@
       });
     }
 
-    // Démarrage
-    initEvents();
-    loadCSV();
+    function initApp(){
+      initEvents();
+      // Le mode par défaut est "cards" (table masquée). Rien d'autre à faire ici.
+    }
   </script>
 </body>
 </html>
