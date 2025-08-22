@@ -1,0 +1,26 @@
+id,nom,sponsor,phase,categorie,statut,interventions,population,exigences,notes,contact_name,contact_email,contact_phone,maj
+onuven,ONUVEN,GFM,I/II,SMD HR,intermittent,Onureg (aza orale); Vénétoclax,"SMD HR 5–<20% blastes (IPSS_R > 3), jamais traités.",,"Inclusions locales, centralisation Grenoble; Ouvert/Fermé par intermittence, slots limités; Réouvert pour 6 places le 27 mai (cohorte a priori complète)",Fenaux,pierre.fenaux@aphp.fr,,8/21/25
+avenhir,AVENHIR,GFM,II,SMD HR,open,Azacitidine; Vénétoclax,"CMML Int_2 ou HR (ICC 2022, CPSS_mol), jamais HMA; ESA ok (wash_out 15 j).",Hydrea autorisée cycles 1–2; Hosp. S1 (ramp_up VEN); Imagerie rate au screening; Résultats centralisés (H. Mondor),,Itzkson,raphael.itzykson@aphp.fr,,8/21/25
+alfa2101,ALFA 2101,ALFA,II randomisée,LAM,open,CPX_351; Chimio 3+7,LAM de novo sans FLT3/NPM1.,,,Rabian,florence.rabian@aphp.fr,,8/21/25
+river81,RIVER_81 (RYVU),RYVU,I/II,LAM,intermittent,RVU120; Vénétoclax,Inclut greffés; traitement PO; cycle 21 j; hosp. S1 (ramp_up & PK).,,Début les mer/jeu; Slots limités; Réouvert 6 places au 15 mai,Fenaux,pierre.fenaux@aphp.fr,,8/21/25
+quantumwild,QuANTUM_Wild (Daiichi),Daiichi,III,LAM,open,Quizartinib; Chimio intensive,"18–70 ans, éligible chimio intensive; randomisation J7 (3 bras).",Flt3 WT,,Raffoux,emmanuel.raffoux@aphp.fr,,8/21/25
+bgb1147,BGB_1147_103 (BeiGene),BeiGene,Ib/II,LAM/SMD HR,open,BGB_11417 (Bcl_2),LAM ou SMD HR naïf ou R/R ≥1 ligne (incl. post_greffe) ou échec HMA seul (pas post AZA_VEN); >65 ans.,Envois moelle centralisés; Hosp. début de cycle (lyse); Pas de posaconazole; Cohorte attribuée au slot,"Ouvert, peu de slots; SMD fermé (ouverture en juillet)",Ades,lionel.ades@aphp.fr,,8/21/25
+combola,COMBOLA (GFM),GFM,I/II,SMD FR,open,Luspatercept; EPO,SMD faible risque sans RS.,,,Ades,lionel.ades@aphp.fr,,8/21/25
+element,CA056_025 ELEMENT (BMS),BMS,III,SMD FR,open,Luspatercept; Epoétine alfa,<5 % blastes; <1 % blastes sg; sEPO ≤500 U/L; Hb ≤9.5; pas de transfusion 16/24 sem.,Inclusion sur résultats centralisés,,Ades,lionel.ades@aphp.fr,,8/21/25
+ag946,AG946_C_002 (AGIOS),AGIOS,IIa/IIb,SMD FR,open,AG_946,"IPSS_R ≤3.5, PNN>500, Hb<10, Plt>75k; BOM obligatoire.",Résultats locaux; Wash_out EPO 28 j / Luspa 65 j; Pas de Revlimid/AZA antérieurs,,Fenaux,pierre.fenaux@aphp.fr,,8/21/25
+atomyelo,ATOMYELO (GFM),GFM,I,SMD FR,open,Arsenic oral (ATO),,,MEP faite; ouverture en juillet,Fenaux,pierre.fenaux@aphp.fr,,8/21/25
+alfappp,ALFA PPP (LAM),ALFA,Cohorte,LAM,open,Tout traitement,LAM ND ou R/R.,,,ALFA,,,8/21/25
+thema,eTHEMA (LAM/LAL/SMD_HR),eTHEMA,Cohorte,LAM/LSL/SMD,open,Tout traitement,De novo / secondaire / therapy_related; ND non traité.,,,THEMA,,,8/21/25
+dynhaemics,DYNHAEMICS,eTHEMA,Cohorte,LAM,open,3+7,LAM,,,Itzkson,raphael.itzykson@aphp.fr,,8/21/25
+salma,SALMA,eTHEMA,II,LAM,open,3+7+salazo,LAM,,,Itzkson,raphael.itzykson@aphp.fr,,8/21/25
+dream,DREAM,eTHEMA,Cohorte,LAM,open,AZA VEN ou AZA IVO,LAM,,,Duchmann,matthieu.duchmann@aphp.fr,,8/21/25
+astx030,ASTX030_01 (ASTEX),ASTEX,III,SMD,planned,Cedazuridine + Azacitidine (oral); vs AZA SC,,,Contrat signé; autorisations OK; Mise en place 25/06/2025,Fenaux,pierre.fenaux@aphp.fr,,8/21/25
+pyramidh,PyramIDH (Servier),Servier,III,MDS,open,Ivosidenib; Azacitidine,MDS,"IDH1 muté, premeire ligne, eligible a HMA",,Sebert,marie.sebert@aphp.fr,,8/21/25
+ker050,KER_050_D301 (Keros),Keros,III,SMD FR,planned,Elritercept (KER_050),MDS,,,Ades,lionel.ades@aphp.fr,,8/21/25
+camelot,cAMeLot (J&J),J&J,III,LAM,Open,Bleximenib; Vénétoclax; Azacitidine,LAM,,Ouvre en Septembre,Ades,lionel.ades@aphp.fr,,8/21/25
+GRAALL,GRAALL 2024,GRAALL,III,LAL,open,Blina,LAL 1L,,,Boissel,Nicolas.boissel@aphp.fr,,8/21/25
+KO-MEN-001,KO-MEN-001,Kura,I,LAM R/R,intermittent,KO-539 - inhibiteur de menin,LAM R/R,,,Ades,lionel.ades@aphp.fr,,8/21/25
+ODYSSEY,ODYSSEY,,I,LAM R/R,open,ABD-3001,"LAM R/R, SMD R/R",,,Benajiba,lina.benajiba@aphp.fr,,8/21/25
+75276617ALE1001,75276617ALE1001,J&J,I,LA R/R,open,JNJ-75276617,"leucémie aiguë récidivante ou réfractaire, porteurs d’altérations du gène KMT2A, NPM1, NUP98, ou NUP214",,,Benajiba,lina.benajiba@aphp.fr,,8/21/25
+LAM – SGR-2921-101,LAM – SGR-2921-101,,I,LAM  MDS R/R,open,SGR-2921,"sujets atteints de leucémie myéloïde aiguë (LMA) récidivante ou réfractaire (r/r), ou de syndrome myélodysplasique (SMD) à haut risque (HR) ou à très haut risque (VHR).",,,Benajiba,lina.benajiba@aphp.fr,,8/21/25
+REM-422-102,REM-422-102,,I,LAM R/R SMD,open,REM-422,atients atteints de LAM récidivante ou réfractaire ou de SMD de haut risque,,,Itzkson,raphael.itzykson@aphp.fr,,8/21/25
