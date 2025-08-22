@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Essais cliniques (CSV ,)</title>
+  <title>Essais cliniques</title>
   <link rel="icon" href="data:,">
   <style>
     :root{
@@ -37,7 +37,7 @@
     <div class="container">
       <h1>Essais cliniques</h1>
       <div class="chips" id="summary"></div>
-      <div style="color:#6b7280;font-size:13px">Contact : <code>Lionel Adès</code> (séparateur <code>,</code>)</div>
+      <div style="color:#6b7280;font-size:13px">Source : <code>essais.csv</code> (auto-détection du séparateur)</div>
     </div>
   </header>
 
@@ -84,28 +84,36 @@
   <!-- PapaParse (CSV parser) -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
-    // ÉTAT
+    // ===== Helpers robustes =====
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const uniq = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>(''+a).localeCompare(''+b,'fr',{numeric:true,sensitivity:'base'}));
+    const contains = (hay, needle) => !needle || (hay||'').toString().toLowerCase().includes((needle||'').toLowerCase());
+
+    function stripBOM(s){ return typeof s==='string' ? s.replace(/^\uFEFF/, '') : s; }
+    function normKey(k){
+      return stripBOM((k||'')+'')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD').replace(/\p{Diacritic}/gu,'')
+        .replace(/\s+/g,'');
+    }
+    function pick(row, aliases){
+      const map = {};
+      for (const k of Object.keys(row)) map[normKey(k)] = row[k];
+      for (const a of aliases){
+        const na = normKey(a);
+        if (na in map) return map[na];
+      }
+      return '';
+    }
+
+    // ===== État =====
     let rows = [], filtered = [];
     let sortKey = null, sortDir = 1;
     const pageSize = 10; let page = 1;
 
-    // OUTILS
-    const $ = s => document.querySelector(s);
-    const $$ = s => Array.from(document.querySelectorAll(s));
-    const uniq = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>(''+a).localeCompare(''+b,'fr',{numeric:true,sensitivity:'base'}));
-    const contains = (hay, needle) => !needle || (hay||'').toString().toLowerCase().includes(needle.toLowerCase());
-
-    function downloadBlob(filename, blob){
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      URL.revokeObjectURL(a.href);
-      a.remove();
-    }
-
-    // RENDU
+    // ===== Rendu =====
     function renderSummary(){
       const chips = [];
       const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
@@ -119,7 +127,7 @@
     function renderTable(){
       const total = filtered.length, totalPages = Math.max(1, Math.ceil(total / pageSize));
       page = Math.min(Math.max(1,page), totalPages);
-      const slice = filtered.slice((page-1)*pageSize, (page)*pageSize);
+      const slice = filtered.slice((page-1)*pageSize, page*pageSize);
 
       $('#table tbody').innerHTML = slice.map(r=>`
         <tr>
@@ -130,7 +138,7 @@
           <td>${r.Categorie??''}</td>
           <td>${r.Investigateur??''}</td>
           <td>${r.Centre??''}</td>
-          <td>${r.Debut??r.Début??''}</td>
+          <td>${r.Debut??''}</td>
           <td>${r.Fin??''}</td>
         </tr>
       `).join('');
@@ -140,7 +148,7 @@
       $('#prev').disabled = page<=1; $('#next').disabled = page>=totalPages;
     }
 
-    // LOGIQUE
+    // ===== Logique =====
     function applyFilters(){
       const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
       filtered = rows
@@ -165,7 +173,7 @@
     function populateFilters(){
       const phases = uniq(rows.map(r=>r.Phase));
       const statuts = uniq(rows.map(r=>r.Statut));
-      const categories = uniq(rows.map(r=>r.Categorie ?? r.Catégorie));
+      const categories = uniq(rows.map(r=>r.Categorie));
       $('#phase').innerHTML = '<option value="">Phase (toutes)</option>' + phases.map(v=>`<option>${v}</option>`).join('');
       $('#statut').innerHTML = '<option value="">Statut (tous)</option>' + statuts.map(v=>`<option>${v}</option>`).join('');
       $('#categorie').innerHTML = '<option value="">Catégorie (toutes)</option>' + categories.map(v=>`<option>${v}</option>`).join('');
@@ -175,21 +183,22 @@
       if(!filtered.length) return;
       const header = Object.keys(filtered[0]);
       const lines = [
-        header.join(','),  // <- séparateur virgule
+        header.join(','),  // séparateur virgule
         ...filtered.map(r=>header.map(k=>{
           const cell = (r[k]??'').toString().replaceAll('"','""');
-          // si la cellule contient virgule, guillemet ou saut de ligne -> on encadre par des guillemets
           return /[,\"\n]/.test(cell) ? `"${cell}"` : cell;
         }).join(','))
       ];
-      downloadBlob('essais_filtrés.csv', new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'}));
+      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'essais_filtrés.csv';
+      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
     }
-
     function exportCurrentToJSON(){
-      downloadBlob('essais_filtrés.json', new Blob([JSON.stringify(filtered,null,2)], {type:'application/json'}));
+      const blob = new Blob([JSON.stringify(filtered,null,2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'essais_filtrés.json';
+      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
     }
 
-    // INIT
     function initEvents(){
       $('#q').addEventListener('input', applyFilters);
       $('#phase').addEventListener('change', applyFilters);
@@ -209,33 +218,38 @@
       });
     }
 
+    // ===== Chargement CSV avec auto-détection du séparateur et normalisation =====
+    function onCsvLoaded(data){
+      rows = data.map(r => ({
+        ID:            pick(r, ['id','identifiant','code']),
+        Titre:         pick(r, ['titre','title','nom','nomdessai','essai']),
+        Phase:         pick(r, ['phase']),
+        Statut:        pick(r, ['statut','status','etat']),
+        Categorie:     pick(r, ['categorie','catégorie','category']),
+        Investigateur: pick(r, ['investigateur','investigator','pi','principalinvestigator']),
+        Centre:        pick(r, ['centre','site','hopital','hôpital']),
+        Debut:         pick(r, ['debut','début','start','datedebut','startdate']),
+        Fin:           pick(r, ['fin','end','datefin','enddate'])
+      }));
+      populateFilters(); applyFilters();
+    }
+
     function loadCSV(){
       Papa.parse('essais.csv', {
         download: true,
         header: true,
-        delimiter: ',',     // <- séparateur virgule
-        skipEmptyLines: true,
-        complete: (res)=>{
-          rows = res.data.map(r=>({
-            ID:r.ID??'',
-            Titre:r.Titre??'',
-            Phase:r.Phase??'',
-            Statut:r.Statut??'',
-            Categorie:r.Categorie??r.Catégorie??'',
-            Investigateur:r.Investigateur??'',
-            Centre:r.Centre??'',
-            Debut:r.Debut??r.Début??'',
-            Fin:r.Fin??''
-          }));
-          populateFilters(); applyFilters();
-        },
+        skipEmptyLines: 'greedy',
+        delimitersToGuess: [',',';','\t','|'],
+        complete: (res)=> onCsvLoaded(res.data),
         error: (err)=> alert('Erreur de chargement du CSV : ' + (err?.message||err))
       });
     }
 
+    // Démarrage
     initEvents();
     loadCSV();
   </script>
 </body>
 </html>
+
 
