@@ -12,19 +12,33 @@
     h1{ margin:0; font-size:1.4rem; color:#0b5aa2;}
     .container{ max-width:1100px; margin:0 auto; padding:16px;}
 
-    .toolbar{ display:grid; gap:8px; grid-template-columns:1fr repeat(6,minmax(120px,180px)); align-items:center; margin:10px 0 14px;}
+    .toolbar{
+      display:grid; gap:8px; grid-template-columns:1fr repeat(5,minmax(120px,180px));
+      align-items:center; margin:10px 0 14px;
+    }
     .toolbar>*{ width:100%;}
     .view-toggle{ display:flex; gap:8px; }
-    input,select,button,textarea{ padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; font-size:14px;}
+    input,select,button{ padding:10px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; font-size:14px;}
     button{ cursor:pointer; border:1px solid var(--primary); background:var(--primary); color:#fff; font-weight:600;}
     button.secondary{ background:#fff; color:#0b5aa2; }
     button.ghost{ background:#fff; color:#374151; border:1px solid var(--border); }
 
     /* Dropdown catégories */
     .dropdown{ position:relative; }
-    .dropdown-button{ display:flex; align-items:center; justify-content:space-between; gap:8px; border:1px solid var(--border); background:#fff; color:#111827; font-weight:500; }
-    .dropdown-button .count{ background:#eef6ff; color:#0b5aa2; border:1px solid #dbeafe; border-radius:999px; padding:2px 8px; font-size:12px; }
-    .dropdown-panel{ position:absolute; z-index:20; top:100%; left:0; right:0; margin-top:6px; background:#fff; border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,0.08); padding:10px; display:none; max-height:320px; overflow:auto; }
+    .dropdown-button{
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      border:1px solid var(--border); background:#fff; color:#111827; font-weight:500;
+    }
+    .dropdown-button .count{
+      background:#eef6ff; color:#0b5aa2; border:1px solid #dbeafe;
+      border-radius:999px; padding:2px 8px; font-size:12px;
+    }
+    .dropdown-panel{
+      position:absolute; z-index:20; top:100%; left:0; right:0; margin-top:6px;
+      background:#fff; border:1px solid var(--border); border-radius:12px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.08); padding:10px; display:none;
+      max-height:320px; overflow:auto;
+    }
     .dropdown.open .dropdown-panel{ display:block; }
     .dropdown .actions{ display:flex; gap:8px; margin-top:8px; }
     .checkrow{ display:flex; align-items:center; gap:8px; padding:6px 4px; }
@@ -52,7 +66,7 @@
     .kv b{ color:#111827; font-weight:600; }
     .hidden{ display:none !important; }
 
-    @media (max-width:1100px){ .cards{ grid-template-columns:repeat(2, 1fr);} }
+    @media (max-width:1100px){ .cards{ grid-template-columns:repeat(2,1fr);} }
     @media (max-width:700px){ .toolbar{ grid-template-columns:1fr 1fr; } .cards{ grid-template-columns:1fr; } }
 
     @media print {
@@ -63,19 +77,9 @@
     }
 
     /* === Couleurs par statut === */
-    .status-open { background:#e6f9ec !important; }
-    .status-intermittent { background:#fff3e0 !important; }
-    .status-planned { background:#fdeaea !important; }
-
-    /* === Modal nouvel essai === */
-    .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:center; justify-content:center; z-index:50; }
-    .modal{ width:min(760px,92vw); background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,0.2); padding:16px; }
-    .modal h2{ margin:0 0 8px; font-size:18px; color:#111827; }
-    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .grid-1{ display:grid; grid-template-columns:1fr; gap:10px; }
-    .modal .actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
-    .modal textarea{ min-height:80px; resize:vertical; }
-    .show{ display:flex; }
+    .status-open { background:#e6f9ec !important; }        /* vert pâle */
+    .status-intermittent { background:#fff3e0 !important;} /* orange pâle */
+    .status-planned { background:#fdeaea !important; }     /* rouge pâle */
   </style>
 </head>
 <body>
@@ -117,12 +121,9 @@
           <button id="modeCards" class="ghost" title="Mode cartes">Cartes</button>
         </div>
 
-        <!-- === Nouvel essai === -->
-        <button id="addTrial" class="secondary" title="Ajouter un essai">Nouvel essai</button>
-
         <div style="display:flex; gap:8px;">
-          <button id="exportCsv" class="secondary" title="Exporter la vue filtrée">Exporter CSV</button>
-          <button id="exportJson" class="secondary" title="Exporter la vue filtrée">Exporter JSON</button>
+          <button id="exportCsv" class="secondary">Exporter CSV</button>
+          <button id="exportJson" class="secondary">Exporter JSON</button>
           <button id="print">Imprimer</button>
         </div>
       </div>
@@ -159,30 +160,6 @@
     </main>
   </div>
 
-  <!-- === Modal Nouvel essai === -->
-  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <h2 id="modalTitle">Ajouter un essai</h2>
-      <div class="grid">
-        <input id="fTitre" placeholder="Titre *" />
-        <input id="fCategorie" placeholder="Catégorie *" />
-        <input id="fPhase" placeholder="Phase" />
-        <input id="fStatut" placeholder="Statut" />
-        <input id="fPopulation" placeholder="Population" />
-        <input id="fContact" placeholder="Contact (email ou tel)" />
-      </div>
-      <div class="grid-1">
-        <textarea id="fInterventions" placeholder="Interventions"></textarea>
-        <textarea id="fNotes" placeholder="Notes"></textarea>
-      </div>
-      <div class="actions">
-        <button id="cancelNew" class="ghost">Annuler</button>
-        <button id="saveNew">Ajouter</button>
-      </div>
-      <div style="font-size:12px;color:#6b7280;margin-top:6px;">Astuce : après ajout, utilise “Exporter tout (CSV)” pour récupérer un fichier mis à jour.</div>
-    </div>
-  </div>
-
   <!-- PapaParse -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
@@ -200,17 +177,7 @@
     const pageSize=10; let page=1; let mode='cards';
     let allCategories=[]; let selectedCategories=new Set();
 
-    /************ Rendu résumé ************/
-    function renderSummary(){
-      const chips=[]; const q=$('#q').value.trim(), p=$('#phase').value, s=$('#statut').value; const cats=[...selectedCategories];
-      if(q) chips.push(`Recherche: “${q}”`);
-      if(p) chips.push(`Phase: ${p}`);
-      if(s) chips.push(`Statut: ${s}`);
-      if(cats.length) chips.push(`Catégories: ${cats.join(', ')}`);
-      $('#summary').innerHTML=chips.map(t=>`<span class="chip">${t}</span>`).join('');
-    }
-
-    /************ Rendu liste & cartes ************/
+    /************ Couleur statut ************/
     function statusClass(stat){
       const st=(stat||'').toLowerCase();
       if(st.includes('open')) return 'status-open';
@@ -219,17 +186,18 @@
       return '';
     }
 
+    /************ Rendu ************/
     function renderTable(){
       const total=filtered.length, tp=Math.max(1, Math.ceil(total/pageSize));
       page=Math.min(Math.max(1,page),tp);
       const sl=filtered.slice((page-1)*pageSize,page*pageSize);
-
-      $('#table tbody').innerHTML=sl.map(r=>`
+      $('#table tbody').innerHTML = sl.map(r=>`
         <tr class="${statusClass(r.Statut)}">
           <td>${r.ID??''}</td><td>${r.Titre??''}</td><td>${r.Phase??''}</td><td>${r.Statut??''}</td>
           <td>${r.Categorie??''}</td><td>${r.Population??''}</td><td>${r.Interventions??''}</td><td>${r.Notes??''}</td><td>${r.Contact??''}</td>
         </tr>`).join('');
-      $('#count').textContent=`${total} essai(s) • Page ${page}/${tp}`; $('#pageInfo').textContent=`Page ${page}/${tp}`;
+      $('#count').textContent=`${total} essai(s) • Page ${page}/${tp}`;
+      $('#pageInfo').textContent=`Page ${page}/${tp}`;
       $('#prev').disabled=page<=1; $('#next').disabled=page>=tp;
     }
 
@@ -237,8 +205,7 @@
       const total=filtered.length, tp=Math.max(1, Math.ceil(total/pageSize));
       page=Math.min(Math.max(1,page),tp);
       const sl=filtered.slice((page-1)*pageSize,page*pageSize);
-
-      $('#cards').innerHTML=sl.map(r=>`
+      $('#cards').innerHTML = sl.map(r=>`
         <div class="card ${statusClass(r.Statut)}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <h3>${r.Titre||'(Sans titre)'}</h3><span class="badge">${r.Phase||'—'}</span>
@@ -250,19 +217,34 @@
           <div class="kv"><b>Notes :</b> ${r.Notes||'—'}</div>
           <div class="kv"><b>Contact :</b> ${r.Contact||'—'}</div>
         </div>`).join('');
-      $('#count').textContent=`${total} essai(s) • Page ${page}/${tp}`; $('#pageInfo').textContent=`Page ${page}/${tp}`;
+      $('#count').textContent=`${total} essai(s) • Page ${page}/${tp}`;
+      $('#pageInfo').textContent=`Page ${page}/${tp}`;
       $('#prev').disabled=page<=1; $('#next').disabled=page>=tp;
     }
 
     function render(){ renderSummary(); if(mode==='list'){ $('#table').classList.remove('hidden'); $('#cards').classList.add('hidden'); renderTable(); } else { $('#cards').classList.remove('hidden'); $('#table').classList.add('hidden'); renderCards(); } }
 
+    /************ Résumé filtres ************/
+    function renderSummary(){
+      const chips=[]; const q=$('#q').value.trim(), p=$('#phase').value, s=$('#statut').value;
+      const cats=[...selectedCategories];
+      if(q) chips.push(`Recherche: “${q}”`);
+      if(p) chips.push(`Phase: ${p}`);
+      if(s) chips.push(`Statut: ${s}`);
+      if(cats.length) chips.push(`Catégories: ${cats.join(', ')}`);
+      $('#summary').innerHTML=chips.map(t=>`<span class="chip">${t}</span>`).join('');
+    }
+
     /************ Filtres ************/
     function applyFilters(){
-      const q=$('#q').value.trim(), p=$('#phase').value, s=$('#statut').value; const cats=[...selectedCategories];
-      filtered=rows
+      const q=$('#q').value.trim(), p=$('#phase').value, s=$('#statut').value;
+      const cats=[...selectedCategories];
+
+      filtered = rows
         .filter(r =>
-          contains(r.Titre,q) || contains(r.Phase,q) || contains(r.Statut,q) || contains(r.Categorie,q) ||
-          contains(r.Population,q) || contains(r.Interventions,q) || contains(r.Notes,q) || contains(r.Contact,q)
+          contains(r.Titre,q) || contains(r.Phase,q) || contains(r.Statut,q) ||
+          contains(r.Categorie,q) || contains(r.Population,q) ||
+          contains(r.Interventions,q) || contains(r.Notes,q) || contains(r.Contact,q)
         )
         .filter(r => p ? r.Phase===p : true)
         .filter(r => s ? r.Statut===s : true)
@@ -278,55 +260,64 @@
     }
 
     function populateFilters(){
-      const phases=uniq(rows.map(r=>r.Phase));
-      const statuts=uniq(rows.map(r=>r.Statut));
-      allCategories=uniq(rows.map(r=>r.Categorie));
+      const phases = uniq(rows.map(r=>r.Phase));
+      const statuts = uniq(rows.map(r=>r.Statut));
+      allCategories = uniq(rows.map(r=>r.Categorie));
+
       $('#phase').innerHTML = '<option value="">Phase (toutes)</option>' + phases.map(v=>`<option>${v}</option>`).join('');
       $('#statut').innerHTML= '<option value="">Statut (tous)</option>'  + statuts.map(v=>`<option>${v}</option>`).join('');
+
       renderCategoryCheckboxes(allCategories);
     }
 
     /************ Dropdown catégories ************/
     function renderCategoryCheckboxes(list){
-      const container=$('#catList');
-      container.innerHTML=list.map(v=>`
+      const container = $('#catList');
+      container.innerHTML = list.map(v=>`
         <label class="checkrow">
           <input type="checkbox" class="checkbox catItem" value="${v ? String(v).replace(/"/g,'&quot;') : ''}" ${selectedCategories.has(v)?'checked':''}/>
           <span>${v||'—'}</span>
-        </label>`).join('');
+        </label>
+      `).join('');
     }
+
     function updateCatCount(){
-      const n=selectedCategories.size; const badge=$('#catCount');
-      if(n>0){ badge.style.display='inline-block'; badge.textContent=n; }
+      const n = selectedCategories.size;
+      const badge = $('#catCount');
+      if(n>0){ badge.style.display='inline-block'; badge.textContent = n; }
       else { badge.style.display='none'; }
     }
+
     function openCloseDropdown(open){
-      const dd=$('#catDropdown');
+      const dd = $('#catDropdown');
       if(open===undefined) dd.classList.toggle('open');
       else dd.classList.toggle('open', !!open);
     }
+
     function clearCategories(){
       selectedCategories.clear();
       $$('.catItem').forEach(cb=>cb.checked=false);
       $('#catAll').checked=false;
       applyFilters();
     }
+
     function selectAllCategories(checked){
       $$('.catItem').forEach(cb=>{
-        cb.checked=checked;
+        cb.checked = checked;
         if(checked) selectedCategories.add(cb.value); else selectedCategories.delete(cb.value);
       });
       applyFilters();
     }
+
     function initCategoryDropdownEvents(){
-      $('#catBtn').addEventListener('click',(e)=>{ e.stopPropagation(); openCloseDropdown(); });
-      document.addEventListener('click',(e)=>{ const dd=$('#catDropdown'); if(!dd.contains(e.target)) openCloseDropdown(false); });
-      $('#catSearch').addEventListener('input',(e)=>{
-        const q=e.target.value.trim().toLowerCase();
-        const filteredList=!q?allCategories:allCategories.filter(c=>((c||'')+'').toLowerCase().includes(q));
+      $('#catBtn').addEventListener('click', (e)=>{ e.stopPropagation(); openCloseDropdown(); });
+      document.addEventListener('click', (e)=>{ const dd = $('#catDropdown'); if(!dd.contains(e.target)) openCloseDropdown(false); });
+      $('#catSearch').addEventListener('input', (e)=>{
+        const q = e.target.value.trim().toLowerCase();
+        const filteredList = !q ? allCategories : allCategories.filter(c => ((c||'')+'').toLowerCase().includes(q));
         renderCategoryCheckboxes(filteredList);
       });
-      $('#catAll').addEventListener('change',(e)=>{ selectAllCategories(e.target.checked); });
+      $('#catAll').addEventListener('change', (e)=>{ selectAllCategories(e.target.checked); });
       $('#catApply').addEventListener('click', ()=>{
         $$('.catItem').forEach(cb=>{
           if(cb.checked) selectedCategories.add(cb.value);
@@ -335,9 +326,9 @@
         applyFilters(); openCloseDropdown(false);
       });
       $('#catClear').addEventListener('click', clearCategories);
-      $('#catPanel').addEventListener('change',(e)=>{
+      $('#catPanel').addEventListener('change', (e)=>{
         if(e.target.classList.contains('catItem')){
-          const val=e.target.value;
+          const val = e.target.value;
           if(e.target.checked) selectedCategories.add(val);
           else selectedCategories.delete(val);
           updateCatCount();
@@ -345,7 +336,7 @@
       });
     }
 
-    /************ Export (vue filtrée) ************/
+    /************ Export ************/
     function exportCurrentToCSV(){
       if(!filtered.length) return;
       const header=Object.keys(filtered[0]);
@@ -366,90 +357,9 @@
       document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
     }
 
-    /************ === Nouvel essai === ************/
-    function openModal(){ $('#modalBackdrop').classList.add('show'); }
-    function closeModal(){ $('#modalBackdrop').classList.remove('show'); }
-    function nextID(){
-      const nums = rows.map(r => parseInt(r.ID,10)).filter(n => !isNaN(n));
-      if(nums.length){ return String(Math.max(...nums)+1); }
-      return 'N'+Date.now();
-    }
-    function addTrialFromForm(){
-      const Titre=$('#fTitre').value.trim();
-      const Categorie=$('#fCategorie').value.trim();
-      if(!Titre || !Categorie){ alert('Titre et Catégorie sont requis.'); return; }
-
-      const newRow = {
-        ID: nextID(),
-        Titre,
-        Phase: $('#fPhase').value.trim(),
-        Statut: $('#fStatut').value.trim(),
-        Categorie,
-        Population: $('#fPopulation').value.trim(),
-        Interventions: $('#fInterventions').value.trim(),
-        Notes: $('#fNotes').value.trim(),
-        Contact: $('#fContact').value.trim()
-      };
-      rows.unshift(newRow);
-      populateFilters();
-      applyFilters();
-      closeModal();
-      exportAllCSV(); // propose le CSV complet mis à jour
-    }
-
-    function exportAllCSV(){
-      if(!rows.length) return;
-      const header = Object.keys(rows[0]);
-      const lines = [
-        header.join(','),
-        ...rows.map(r=>header.map(k=>{
-          const cell=(r[k]??'').toString().replaceAll('"','""');
-          return /[,"\n]/.test(cell)?`"${cell}"`:cell;
-        }).join(','))
-      ];
-      const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
-      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='essais_mis_a_jour.csv';
-      document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
-    }
-
-    /************ Événements généraux ************/
-    function initEvents(){
-      $('#q').addEventListener('input',applyFilters);
-      $('#phase').addEventListener('change',applyFilters);
-      $('#statut').addEventListener('change',applyFilters);
-
-      $('#print').addEventListener('click',()=>window.print());
-      $('#exportCsv').addEventListener('click',exportCurrentToCSV);
-      $('#exportJson').addEventListener('click',exportCurrentToJSON);
-
-      $('#prev').addEventListener('click',()=>{ page=Math.max(1,page-1); render(); });
-      $('#next').addEventListener('click',()=>{ page=page+1; render(); });
-
-      // Tri tableau
-      $$('#table thead th').forEach(th=>{
-        th.addEventListener('click',()=>{
-          const k=th.getAttribute('data-key');
-          if(sortKey===k) sortDir=-sortDir; else { sortKey=k; sortDir=1; }
-          applyFilters();
-        });
-      });
-
-      $('#modeList').addEventListener('click',()=>{ mode='list'; render(); });
-      $('#modeCards').addEventListener('click',()=>{ mode='cards'; render(); });
-
-      // Catégories (dropdown)
-      initCategoryDropdownEvents();
-
-      // Nouvel essai (modale)
-      $('#addTrial').addEventListener('click', openModal);
-      $('#cancelNew').addEventListener('click', closeModal);
-      $('#saveNew').addEventListener('click', addTrialFromForm);
-      $('#modalBackdrop').addEventListener('click', (e)=>{ if(e.target.id==='modalBackdrop') closeModal(); });
-    }
-
     /************ Chargement CSV ************/
     function onCsvLoaded(data){
-      rows=data.map(r=>({
+      rows = data.map(r=>({
         ID:pick(r,['id','identifiant','code']),
         Titre:pick(r,['titre','title','nom','nomdessai','essai']),
         Phase:pick(r,['phase']),
@@ -473,7 +383,18 @@
     }
 
     // Init
-    initEvents(); loadCSV();
+    initCategoryDropdownEvents();
+    loadCSV();
+    $('#q').addEventListener('input', applyFilters);
+    $('#phase').addEventListener('change', applyFilters);
+    $('#statut').addEventListener('change', applyFilters);
+    $('#modeList').addEventListener('click', ()=>{ mode='list'; render(); });
+    $('#modeCards').addEventListener('click', ()=>{ mode='cards'; render(); });
+    $('#prev').addEventListener('click', ()=>{ page=Math.max(1,page-1); render(); });
+    $('#next').addEventListener('click', ()=>{ page=page+1; render(); });
+    $('#print').addEventListener('click', ()=>window.print());
+    $('#exportCsv').addEventListener('click', exportCurrentToCSV);
+    $('#exportJson').addEventListener('click', exportCurrentToJSON);
   </script>
 </body>
 </html>
