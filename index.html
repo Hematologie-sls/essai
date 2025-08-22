@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Essais cliniques (CSV)</title>
+  <link rel="icon" href="data:,">
+  <style>
+    :root{
+      --primary:#0b5aa2; /* bleu doux */
+      --accent:#e44d26;  /* accent chaleureux */
+      --bg:#ffffff;
+      --muted:#f4f6f8;
+      --text:#1f2937;
+      --border:#e5e7eb;
+    }
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+    }
+    header{
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #ffffff, #fafafa);
+    }
+    h1{ margin: 0; font-size: 1.4rem; color: var(--primary);}
+    .container{ max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .toolbar{
+      display: grid; gap: 8px;
+      grid-template-columns: 1fr repeat(4, minmax(120px, 180px));
+      align-items: center;
+      margin: 10px 0 14px;
+    }
+    .toolbar > * { width: 100%; }
+    input, select, button{
+      padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: 10px; background: #fff; font-size: 14px;
+    }
+    button{
+      cursor: pointer; border: 1px solid var(--primary);
+      background: var(--primary); color: #fff; font-weight: 600;
+    }
+    button.secondary{
+      background: #fff; color: var(--primary);
+    }
+    table{
+      width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    thead th{
+      text-align: left; background: var(--muted); border-bottom: 1px solid var(--border);
+      padding: 10px; font-size: 13px; color:#374151; user-select: none; cursor: pointer;
+    }
+    tbody td{ border-bottom: 1px solid var(--border); padding: 10px; font-size: 14px; }
+    tbody tr:hover{ background: #fcfcfd; }
+    .chips{ display:flex; flex-wrap: wrap; gap:6px; margin-bottom:10px; }
+    .chip{
+      background:#eef6ff; color:#0b5aa2; padding:6px 10px; border-radius:999px; font-size:12px; border:1px solid #dbeafe;
+    }
+    .footer{
+      display:flex; gap:8px; align-items:center; justify-content:space-between; margin-top:10px;
+    }
+    .pagination{ display:flex; gap:6px; }
+    .pagination button{ padding:8px 10px; }
+    @media (max-width: 900px){
+      .toolbar{ grid-template-columns: 1fr 1fr; }
+    }
+    @media print {
+      header, .toolbar, .footer { display: none !important; }
+      table { box-shadow: none; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Essais cliniques</h1>
+      <div class="chips" id="summary"></div>
+      <div style="color:#6b7280;font-size:13px">Source : <code>essais.csv</code> (chargé côté navigateur)</div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Rechercher (Titre, Investigateur, Centre, ...)" />
+      <select id="phase"><option value="">Phase (toutes)</option></select>
+      <select id="statut"><option value="">Statut (tous)</option></select>
+      <select id="categorie"><option value="">Catégorie (toutes)</option></select>
+      <div style="display:flex; gap:8px;">
+        <button id="exportCsv" class="secondary" title="Exporter la vue en CSV">Exporter CSV</button>
+        <button id="exportJson" class="secondary" title="Exporter la vue en JSON">Exporter JSON</button>
+        <button id="print">Imprimer</button>
+      </div>
+    </div>
+
+    <table id="table">
+      <thead>
+        <tr>
+          <th data-key="ID">ID</th>
+          <th data-key="Titre">Titre</th>
+          <th data-key="Phase">Phase</th>
+          <th data-key="Statut">Statut</th>
+          <th data-key="Categorie">Catégorie</th>
+          <th data-key="Investigateur">Investigateur</th>
+          <th data-key="Centre">Centre</th>
+          <th data-key="Debut">Début</th>
+          <th data-key="Fin">Fin</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="footer">
+      <div id="count"></div>
+      <div class="pagination">
+        <button id="prev" class="secondary">Précédent</button>
+        <span id="pageInfo" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;"></span>
+        <button id="next">Suivant</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- PapaParse (CSV parser) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    // ------------ ÉTAT ------------
+    let rows = [];          // toutes les lignes du CSV (objets)
+    let filtered = [];      // lignes après filtres
+    let sortKey = null;     // clé de tri
+    let sortDir = 1;        // 1=asc, -1=desc
+    const pageSize = 10;    // nb lignes par page
+    let page = 1;
+
+    // ------------ OUTILS ------------
+    const $ = sel => document.querySelector(sel);
+    const $$ = sel => Array.from(document.querySelectorAll(sel));
+    const uniq = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>(''+a).localeCompare(''+b,'fr',{numeric:true,sensitivity:'base'}));
+
+    function formatDate(s){
+      if(!s) return '';
+      // laisse tel quel si ISO yyyy-mm-dd
+      return s;
+    }
+    function contains(hay, needle){
+      if(!needle) return true;
+      return (hay||'').toString().toLowerCase().includes(needle.toLowerCase());
+    }
+
+    function downloadBlob(filename, blob){
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }
+
+    // ------------ RENDU ------------
+    function renderSummary(){
+      const chips = [];
+      const q = $('#q').value.trim();
+      const p = $('#phase').value;
+      const s = $('#statut').value;
+      const c = $('#categorie').value;
+      if(q) chips.push(`Recherche: “${q}”`);
+      if(p) chips.push(`Phase: ${p}`);
+      if(s) chips.push(`Statut: ${s}`);
+      if(c) chips.push(`Catégorie: ${c}`);
+      $('#summary').innerHTML = chips.map(t=>`<span class="chip">${t}</span>`).join('');
+    }
+
+    function renderTable(){
+      // pagination
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      page = Math.min(Math.max(1, page), totalPages);
+      const start = (page-1)*pageSize;
+      const data = filtered.slice(start, start+pageSize);
+
+      // corps du tableau
+      const html = data.map(r=>`
+        <tr>
+          <td>${r.ID??''}</td>
+          <td>${r.Titre??''}</td>
+          <td>${r.Phase??''}</td>
+          <td>${r.Statut??''}</td>
+          <td>${r.Categorie??''}</td>
+          <td>${r.Investigateur??''}</td>
+          <td>${r.Centre??''}</td>
+          <td>${formatDate(r.Debut)}</td>
+          <td>${formatDate(r.Fin)}</td>
+        </tr>
+      `).join('');
+      $('#table tbody').innerHTML = html;
+
+      // pied
+      $('#count').textContent = `${total} essai(s) • Page ${page}/${totalPages}`;
+      $('#pageInfo').textContent = `Page ${page}/${totalPages}`;
+      $('#prev').disabled = page<=1;
+      $('#next').disabled = page>=totalPages;
+    }
+
+    // ------------ LOGIQUE ------------
+    function applyFilters(){
+      const q = $('#q').value.trim();
+      const p = $('#phase').value;
+      const s = $('#statut').value;
+      const c = $('#categorie').value;
+
+      filtered = rows.filter(r =>
+        contains(r.Titre, q) ||
+        contains(r.Investigateur, q) ||
+        contains(r.Centre, q) ||
+        contains(r.Phase, q) ||
+        contains(r.Statut, q) ||
+        contains(r.Categorie, q)
+      ).filter(r => (p? r.Phase===p : true))
+       .filter(r => (s? r.Statut===s : true))
+       .filter(r => (c? r.Categorie===c : true));
+
+      // tri
+      if(sortKey){
+        filtered.sort((a,b)=>{
+          const av = (a[sortKey]??'').toString();
+          const bv = (b[sortKey]??'').toString();
+          return av.localeCompare(bv,'fr',{numeric:true,sensitivity:'base'}) * sortDir;
+        });
+      }
+      page = 1;
+      renderSummary();
+      renderTable();
+    }
+
+    function populateFilters(){
+      const phases = uniq(rows.map(r=>r.Phase));
+      const statuts = uniq(rows.map(r=>r.Statut));
+      const categories = uniq(rows.map(r=>r.Categorie));
+
+      $('#phase').innerHTML = '<option value="">Phase (toutes)</option>' + phases.map(v=>`<option>${v}</option>`).join('');
+      $('#statut').innerHTML = '<option value="">Statut (tous)</option>' + statuts.map(v=>`<option>${v}</option>`).join('');
+      $('#categorie').innerHTML = '<option value="">Catégorie (toutes)</option>' + categories.map(v=>`<option>${v}</option>`).join('');
+    }
+
+    function exportCurrentToCSV(){
+      if(!filtered.length) return;
+      const header = Object.keys(filtered[0]);
+      const lines = [
+        header.join(';'),
+        ...filtered.map(r=>header.map(k=>{
+          const cell = (r[k]??'').toString().replaceAll('"','""');
+          return /[;"\n]/.test(cell) ? `"${cell}"` : cell;
+        }).join(';'))
+      ];
+      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+      downloadBlob('essais_filtrés.csv', blob);
+    }
+
+    function exportCurrentToJSON(){
+      const blob = new Blob([JSON.stringify(filtered, null, 2)], {type:'application/json'});
+      downloadBlob('essais_filtrés.json', blob);
+    }
+
+    // ------------ INIT ------------
+    function initEvents(){
+      $('#q').addEventListener('input', applyFilters);
+      $('#phase').addEventListener('change', applyFilters);
+      $('#statut').addEventListener('change', applyFilters);
+      $('#categorie').addEventListener('change', applyFilters);
+
+      $('#print').addEventListener('click', ()=>window.print());
+      $('#exportCsv').addEventListener('click', exportCurrentToCSV);
+      $('#exportJson').addEventListener('click', exportCurrentToJSON);
+
+      $('#prev').addEventListener('click', ()=>{ page=Math.max(1,page-1); renderTable(); });
+      $('#next').addEventListener('click', ()=>{ page=page+1; renderTable(); });
+
+      // tri par clic entête
+      $$('#table thead th').forEach(th=>{
+        th.addEventListener('click', ()=>{
+          const key = th.getAttribute('data-key');
+          if(sortKey === key){ sortDir = -sortDir; }
+          else { sortKey = key; sortDir = 1; }
+          applyFilters();
+        });
+      });
+    }
+
+    function loadCSV(){
+      Papa.parse('essais.csv', {
+        download: true,
+        header: true,
+        delimiter: ';',
+        skipEmptyLines: true,
+        complete: (res)=>{
+          rows = res.data.map(r=>({
+            ID: r.ID ?? '',
+            Titre: r.Titre ?? '',
+            Phase: r.Phase ?? '',
+            Statut: r.Statut ?? '',
+            Categorie: r.Categorie ?? r.Catégorie ?? '',
+            Investigateur: r.Investigateur ?? '',
+            Centre: r.Centre ?? '',
+            Debut: r.Debut ?? r.Début ?? '',
+            Fin: r.Fin ?? ''
+          }));
+          populateFilters();
+          applyFilters();
+        },
+        error: (err)=>{ alert('Erreur de chargement du CSV : ' + err?.message); }
+      });
+    }
+
+    // Démarrage
+    initEvents();
+    loadCSV();
+  </script>
+</body>
+</html>
