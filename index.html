@@ -50,3 +50,192 @@
       <div style="display:flex; gap:8px;">
         <button id="exportCsv" class="secondary" title="Exporter la vue en CSV">Exporter CSV</button>
         <button id="exportJson" class="secondary" title="Exporter la vue en JSON">Exporter JSON</button>
+        <button id="print">Imprimer</button>
+      </div>
+    </div>
+
+    <table id="table">
+      <thead>
+        <tr>
+          <th data-key="ID">ID</th>
+          <th data-key="Titre">Titre</th>
+          <th data-key="Phase">Phase</th>
+          <th data-key="Statut">Statut</th>
+          <th data-key="Categorie">Catégorie</th>
+          <th data-key="Investigateur">Investigateur</th>
+          <th data-key="Centre">Centre</th>
+          <th data-key="Debut">Début</th>
+          <th data-key="Fin">Fin</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <div class="footer">
+      <div id="count"></div>
+      <div class="pagination">
+        <button id="prev" class="secondary">Précédent</button>
+        <span id="pageInfo" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;"></span>
+        <button id="next">Suivant</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- PapaParse (CSV parser) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    // ÉTAT
+    let rows = [], filtered = [];
+    let sortKey = null, sortDir = 1;
+    const pageSize = 10; let page = 1;
+
+    // OUTILS
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const uniq = arr => [...new Set(arr.filter(Boolean))].sort((a,b)=>(''+a).localeCompare(''+b,'fr',{numeric:true,sensitivity:'base'}));
+    const contains = (hay, needle) => !needle || (hay||'').toString().toLowerCase().includes(needle.toLowerCase());
+
+    function downloadBlob(filename, blob){
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }
+
+    // RENDU
+    function renderSummary(){
+      const chips = [];
+      const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
+      if(q) chips.push(`Recherche: “${q}”`);
+      if(p) chips.push(`Phase: ${p}`);
+      if(s) chips.push(`Statut: ${s}`);
+      if(c) chips.push(`Catégorie: ${c}`);
+      $('#summary').innerHTML = chips.map(t=>`<span class="chip">${t}</span>`).join('');
+    }
+
+    function renderTable(){
+      const total = filtered.length, totalPages = Math.max(1, Math.ceil(total / pageSize));
+      page = Math.min(Math.max(1,page), totalPages);
+      const slice = filtered.slice((page-1)*pageSize, (page)*pageSize);
+
+      $('#table tbody').innerHTML = slice.map(r=>`
+        <tr>
+          <td>${r.ID??''}</td>
+          <td>${r.Titre??''}</td>
+          <td>${r.Phase??''}</td>
+          <td>${r.Statut??''}</td>
+          <td>${r.Categorie??''}</td>
+          <td>${r.Investigateur??''}</td>
+          <td>${r.Centre??''}</td>
+          <td>${r.Debut??r.Début??''}</td>
+          <td>${r.Fin??''}</td>
+        </tr>
+      `).join('');
+
+      $('#count').textContent = `${total} essai(s) • Page ${page}/${totalPages}`;
+      $('#pageInfo').textContent = `Page ${page}/${totalPages}`;
+      $('#prev').disabled = page<=1; $('#next').disabled = page>=totalPages;
+    }
+
+    // LOGIQUE
+    function applyFilters(){
+      const q = $('#q').value.trim(), p = $('#phase').value, s = $('#statut').value, c = $('#categorie').value;
+      filtered = rows
+        .filter(r =>
+          contains(r.Titre,q) || contains(r.Investigateur,q) || contains(r.Centre,q) ||
+          contains(r.Phase,q) || contains(r.Statut,q) || contains(r.Categorie,q)
+        )
+        .filter(r => p ? r.Phase===p : true)
+        .filter(r => s ? r.Statut===s : true)
+        .filter(r => c ? r.Categorie===c : true);
+
+      if(sortKey){
+        filtered.sort((a,b)=>{
+          const av = (a[sortKey]??'').toString();
+          const bv = (b[sortKey]??'').toString();
+          return av.localeCompare(bv,'fr',{numeric:true,sensitivity:'base'}) * sortDir;
+        });
+      }
+      page = 1; renderSummary(); renderTable();
+    }
+
+    function populateFilters(){
+      const phases = uniq(rows.map(r=>r.Phase));
+      const statuts = uniq(rows.map(r=>r.Statut));
+      const categories = uniq(rows.map(r=>r.Categorie ?? r.Catégorie));
+      $('#phase').innerHTML = '<option value="">Phase (toutes)</option>' + phases.map(v=>`<option>${v}</option>`).join('');
+      $('#statut').innerHTML = '<option value="">Statut (tous)</option>' + statuts.map(v=>`<option>${v}</option>`).join('');
+      $('#categorie').innerHTML = '<option value="">Catégorie (toutes)</option>' + categories.map(v=>`<option>${v}</option>`).join('');
+    }
+
+    function exportCurrentToCSV(){
+      if(!filtered.length) return;
+      const header = Object.keys(filtered[0]);
+      const lines = [
+        header.join(','),  // <- séparateur virgule
+        ...filtered.map(r=>header.map(k=>{
+          const cell = (r[k]??'').toString().replaceAll('"','""');
+          // si la cellule contient virgule, guillemet ou saut de ligne -> on encadre par des guillemets
+          return /[,\"\n]/.test(cell) ? `"${cell}"` : cell;
+        }).join(','))
+      ];
+      downloadBlob('essais_filtrés.csv', new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'}));
+    }
+
+    function exportCurrentToJSON(){
+      downloadBlob('essais_filtrés.json', new Blob([JSON.stringify(filtered,null,2)], {type:'application/json'}));
+    }
+
+    // INIT
+    function initEvents(){
+      $('#q').addEventListener('input', applyFilters);
+      $('#phase').addEventListener('change', applyFilters);
+      $('#statut').addEventListener('change', applyFilters);
+      $('#categorie').addEventListener('change', applyFilters);
+      $('#print').addEventListener('click', ()=>window.print());
+      $('#exportCsv').addEventListener('click', exportCurrentToCSV);
+      $('#exportJson').addEventListener('click', exportCurrentToJSON);
+      $('#prev').addEventListener('click', ()=>{ page=Math.max(1,page-1); renderTable(); });
+      $('#next').addEventListener('click', ()=>{ page=page+1; renderTable(); });
+      $$('#table thead th').forEach(th=>{
+        th.addEventListener('click', ()=>{
+          const key = th.getAttribute('data-key');
+          if(sortKey===key) sortDir = -sortDir; else { sortKey = key; sortDir = 1; }
+          applyFilters();
+        });
+      });
+    }
+
+    function loadCSV(){
+      Papa.parse('essais.csv', {
+        download: true,
+        header: true,
+        delimiter: ',',     // <- séparateur virgule
+        skipEmptyLines: true,
+        complete: (res)=>{
+          rows = res.data.map(r=>({
+            ID:r.ID??'',
+            Titre:r.Titre??'',
+            Phase:r.Phase??'',
+            Statut:r.Statut??'',
+            Categorie:r.Categorie??r.Catégorie??'',
+            Investigateur:r.Investigateur??'',
+            Centre:r.Centre??'',
+            Debut:r.Debut??r.Début??'',
+            Fin:r.Fin??''
+          }));
+          populateFilters(); applyFilters();
+        },
+        error: (err)=> alert('Erreur de chargement du CSV : ' + (err?.message||err))
+      });
+    }
+
+    initEvents();
+    loadCSV();
+  </script>
+</body>
+</html>
+
