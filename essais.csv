@@ -16,7 +16,7 @@ salma;SALMA;eTHEMA;II;LAM;open;3+7+salazo;LAM 3+7;;;Itzkson;raphael.itzykson@aph
 dream;DREAM;eTHEMA;Cohorte;LAM;open;AZA VEN ou AZA IVO;LAM non intensif;;;Duchmann;matthieu.duchmann@aphp.fr;;21/08/2025
 astx030;ASTX030_01 (ASTEX);ASTEX;III;SMD;planned;"Cedazuridine + Azacitidine (oral); vs AZA SC";;;"Contrat signé; autorisations OK; Mise en place 25/06/2025";Fenaux;pierre.fenaux@aphp.fr;;21/08/2025
 pyramidh;PyramIDH (Servier);Servier;III;SMD;open;"Ivosidenib; Azacitidine";MDS IDH1;IDH1 muté, premeire ligne, eligible a HMA;;Sebert;marie.sebert@aphp.fr;;21/08/2025
-ker050;KER_050_D301 (Keros);Keros;III;SMD FR;planned;Elritercept (KER_050);MDS;;;Ades;lionel.ades@aphp.fr;;21/08/2025
+ker050;KER_050_D301 (Keros);Takeda;III;SMD FR;planned;Elritercept (KER_050);MDS;;;Ades;lionel.ades@aphp.fr;;21/08/2025
 camelot;cAMeLot (J&J);J&J;III;LAM;Open;"Bleximenib; Vénétoclax; Azacitidine";LAM;;Ouvre en Septembre;Ades;lionel.ades@aphp.fr;;21/08/2025
 GRAALL;GRAALL 2024;GRAALL;III;LAL;open;Blina;LAL 1L;;;Boissel;Nicolas.boissel@aphp.fr;;21/08/2025
 KO-MEN-001;KO-MEN-001;Kura;I;LAM R/R;intermittent;KO-539 - inhibiteur de menin;LAM R/R;;;Ades;lionel.ades@aphp.fr;;21/08/2025
@@ -24,3 +24,5 @@ ODYSSEY;ODYSSEY;;I;LAM R/R;open;ABD-3001;LAM R/R, SMD R/R;;;Benajiba;lina.benaji
 75276617ALE1001;75276617ALE1001;J&J;I;LA R/R;open;JNJ-75276617;leucémie aiguë récidivante ou réfractaire, porteurs d’altérations du gène KMT2A, NPM1, NUP98, ou NUP214;;;Benajiba;lina.benajiba@aphp.fr;;21/08/2025
 LAM – SGR-2921-101;LAM – SGR-2921-101;;I;LAM  MDS R/R;open;SGR-2921;sujets atteints de leucémie myéloïde aiguë (LMA) récidivante ou réfractaire (r/r), ou de syndrome myélodysplasique (SMD) à haut risque (HR) ou à très haut risque (VHR).;;;Benajiba;lina.benajiba@aphp.fr;;21/08/2025
 REM-422-102;REM-422-102;;I;LAM R/R SMD;open;REM-422;atients atteints de LAM récidivante ou réfractaire ou de SMD de haut risque;;;Itzkson;raphael.itzykson@aphp.fr;;21/08/2025
+GLORA-4;GLORA-4;Ascentage;III;SMD HR;planned;AZA +/- Lisaftoclax (APG-2575);Multicenter, Double-blind, Randomized, Registrational Phase 3 Study of Lisaftoclax (APG-2575) in Combination with Azacitidine (AZA) in Patients with Newly Diagnosed Higher Risk Myelodysplastic Syndrome (HR-MDS) ;;;Ades;lionel.ades@aphp.fr;;02/09/2025
+MIDAS;MIDAS;) GSK ;II randomisée;SMD LR;planned;Momélotinib;Étude de phase II, randomisée et en ouvert, menée sur le momélotinib auprès de participants atteints d’anémie due à un syndrome myélodysplasique à faible risque;;;Fenaux;pierre.fenaux@aphp.fr;;02/09/2025
